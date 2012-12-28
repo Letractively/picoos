@@ -19,5 +19,5 @@ package org.latestbit.picoos
 
 import javax.servlet.http.HttpServletResponse
 
-case class HttpResourceResponse(val body : HttpServletResponse) {
+case class HttpResourceResponse(val http : HttpServletResponse) {
 }

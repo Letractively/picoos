@@ -19,6 +19,11 @@ package org.latestbit.picoos
 
 import javax.servlet.http.HttpServletRequest
 import org.latestbit.picoos.HttpMethod._
+import javax.servlet.ServletConfig
 
-case class HttpResourceRequest(val httpMethod : HttpMethod, val body : HttpServletRequest) {  	
+case class HttpResourceRequest(
+    val httpMethod : HttpMethod, 
+    val http : HttpServletRequest,
+    val servletPrefix : String,
+    val servletConfig : ServletConfig) {  	
 }

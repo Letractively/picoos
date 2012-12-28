@@ -33,38 +33,38 @@ object httpNoResult extends httpNoResult
 
 case class httpTextResult(textResult : String) extends ApiMethodResult {
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
-	   resp.body.setContentType("text/plain")
-	   resp.body.getWriter().append(textResult)
-	   resp.body.getWriter().flush()    
+	   resp.http.setContentType("text/plain")
+	   resp.http.getWriter().append(textResult)
+	   resp.http.getWriter().flush()    
   }
 } 
 case class httpJsonResult[T<:AnyRef](jsonObj : T) extends ApiMethodResult {
   lazy val textResult = Json.generate(jsonObj)
 
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
-      resp.body.setContentType("application/json")
-      resp.body.getWriter().append(textResult)
-      resp.body.getWriter().flush()
+      resp.http.setContentType("application/json")
+      resp.http.getWriter().append(textResult)
+      resp.http.getWriter().flush()
   }
   
 }
 
 case class httpXmlResult(xmlObj : Node) extends ApiMethodResult  {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
-      resp.body.setContentType("text/xml")
-      scala.xml.XML.write(resp.body.getWriter(), xmlObj, "utf-8", true, null)
-      resp.body.getWriter().flush()
+      resp.http.setContentType("text/xml")
+      scala.xml.XML.write(resp.http.getWriter(), xmlObj, "utf-8", true, null)
+      resp.http.getWriter().flush()
 	}  
 }
 case class httpRedirectResult(url : String)  extends ApiMethodResult {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
-		resp.body.sendRedirect( url )	  
+		resp.http.sendRedirect( url )	  
 	}
 }
 
 case class httpErrorResult(errorCode : Int, errorString : String)  extends ApiMethodResult {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
-		resp.body.sendError(errorCode, errorString)	  
+		resp.http.sendError(errorCode, errorString)	  
 	}
 }
 

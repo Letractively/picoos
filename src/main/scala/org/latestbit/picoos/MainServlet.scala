@@ -29,7 +29,7 @@ import org.latestbit.picoos.HttpMethod._
 class MainServlet extends HttpServlet {      
   private final val log : Logger  = Logger.getLogger(classOf[MainServlet].getName())
   
-  val DEFAULT_API_CONTEXT = "/rest-api/"
+  val DEFAULT_API_CONTEXT = "/rest-api"
     
   override def doGet(req : HttpServletRequest , resp : HttpServletResponse) = {
     processRequest(HttpMethod.GET,req,resp)
@@ -94,13 +94,14 @@ class MainServlet extends HttpServlet {
   
   def processRequest(httpMethod : HttpMethod, req : HttpServletRequest , resp : HttpServletResponse) = {
     val requestUri = req.getRequestURI()
-    val idx = requestUri.lastIndexOf(getAPIPathPrefix())
+    val apiPathPrefix = getAPIPathPrefix()
+    val idx = requestUri.lastIndexOf(apiPathPrefix)
     if(idx != -1) {
     	val fullPath = requestUri.substring(idx)
-    	val servicePath = "/"+fullPath.replaceFirst(getAPIPathPrefix(), "")
+    	val servicePath = fullPath.replaceFirst(apiPathPrefix, "")
 	    try {	      
 	      registry.findHandler(httpMethod, servicePath) match {
-	        case Some(handler) => handler(HttpResourceRequest(httpMethod,req),HttpResourceResponse(resp))
+	        case Some(handler) => handler(HttpResourceRequest(httpMethod,req, apiPathPrefix, getServletConfig()),HttpResourceResponse(resp))
 	        case _ => resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found any API handler at "+servicePath)
 	      }
 	    }

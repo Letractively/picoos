@@ -19,7 +19,7 @@ package org.latestbit.picoos
 
 import org.latestbit.picoos.dsl._
 
-class HttpResource(basePath : String) extends ApiDsl {
+class HttpResource(val resourcePath : String) extends ApiDsl {
 	
 	private val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) )
 	private val allApiMethodsNames = allApiMethods.map(_.getName).sorted
@@ -35,7 +35,7 @@ class HttpResource(basePath : String) extends ApiDsl {
 		  }		  
 		  
 		  registry.registerHandler(
-		      basePath+handlerPath, 
+		      resourcePath+handlerPath, 
 		      HttpResourceRequestHandler( methodDef.handler ).httpRequestHandler, 
 		      methodDef.httpMethod)		  
 		})
