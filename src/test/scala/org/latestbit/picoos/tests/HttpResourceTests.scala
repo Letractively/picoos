@@ -42,5 +42,12 @@ class HttpResourceTests extends FeatureSpec {
   	      httpResource.getUsers6.execute(null)
   	    }  	    
 	  }
+  	  
+	  scenario("Checking JSon & XML results for HttpResource actions") {
+		  val jsonResult = httpResource.getUsers3.execute(null).asInstanceOf[httpJsonResult[TestJson]] 
+	      assert ( jsonResult.jsonObj.value == "Test" )
+	      assert( jsonResult.textResult.trim() == "{\"value\":\"Test\"}" )
+	  }
   	}
+  	
 }
