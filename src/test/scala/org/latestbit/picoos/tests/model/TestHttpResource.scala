@@ -16,8 +16,8 @@
 */
 package org.latestbit.picoos.tests.model
 
-import org.latestbit.msf._
-import org.latestbit.msf.dsl._
+import org.latestbit.picoos._
+import org.latestbit.picoos.dsl._
 
 case class TestJson(value : String)
 class TestHttpResource extends HttpResource("/resource1") {
