@@ -15,12 +15,12 @@
    limitations under the License.
 */
 
-package org.latestbit.msf.tests
+package org.latestbit.picoos.tests
 
 import org.scalatest.FeatureSpec
-import org.latestbit.msf._
-import org.latestbit.msf.dsl._
-import org.latestbit.msf.tests.model._
+import org.latestbit.picoos._
+import org.latestbit.picoos.dsl._
+import org.latestbit.picoos.tests.model._
 
 
 class HttpResourceTests extends FeatureSpec {

@@ -15,10 +15,10 @@
    limitations under the License.
 */
 
-package org.latestbit.msf.dsl
+package org.latestbit.picoos.dsl
 
-import org.latestbit.msf._
-import org.latestbit.msf.HttpMethod._
+import org.latestbit.picoos._
+import org.latestbit.picoos.HttpMethod._
 import com.codahale.jerkson._
 import scala.xml.Node
 

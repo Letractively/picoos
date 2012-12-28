@@ -16,7 +16,7 @@
 */
 
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
 object HttpMethod extends Enumeration {
 	type HttpMethod = Value

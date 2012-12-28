@@ -15,7 +15,7 @@
    limitations under the License.
 */
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
 
 import javax.servlet.http.HttpServlet
@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.servlet.ServletException
 import java.util.logging.Logger
 import java.util.logging.Level
-import org.latestbit.msf.HttpMethod._
+import org.latestbit.picoos.HttpMethod._
 
 class MainServlet extends HttpServlet {      
   private final val log : Logger  = Logger.getLogger(classOf[MainServlet].getName())

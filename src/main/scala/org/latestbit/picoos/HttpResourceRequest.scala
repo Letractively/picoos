@@ -15,8 +15,10 @@
    limitations under the License.
 */
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
-trait HttpResourcesFactory {
-  def createResources(registry : HttpResourcesRegistry)
+import javax.servlet.http.HttpServletRequest
+import org.latestbit.picoos.HttpMethod._
+
+case class HttpResourceRequest(val httpMethod : HttpMethod, val body : HttpServletRequest) {  	
 }

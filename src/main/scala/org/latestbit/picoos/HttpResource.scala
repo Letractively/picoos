@@ -15,9 +15,9 @@
    limitations under the License.
 */
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
-import org.latestbit.msf.dsl._
+import org.latestbit.picoos.dsl._
 
 class HttpResource(basePath : String) extends ApiDsl {
 	

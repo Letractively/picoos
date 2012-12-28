@@ -15,10 +15,10 @@
    limitations under the License.
 */
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
 import scala.collection.mutable.{Map, HashMap, SynchronizedMap}
-import org.latestbit.msf.HttpMethod._
+import org.latestbit.picoos.HttpMethod._
 
 trait HttpResourcesRegistry {
 	def registerHandler(

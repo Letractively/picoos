@@ -15,10 +15,10 @@
    limitations under the License.
 */
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
-import org.latestbit.msf._
-import org.latestbit.msf.dsl._
+import org.latestbit.picoos._
+import org.latestbit.picoos.dsl._
 
 case class HttpResourceRequestHandler(apiHandler : Option[ApiMethodBodyHandler]) {
 	  

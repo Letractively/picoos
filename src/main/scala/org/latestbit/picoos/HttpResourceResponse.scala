@@ -15,7 +15,7 @@
    limitations under the License.
 */
 
-package org.latestbit.msf
+package org.latestbit.picoos
 
 import javax.servlet.http.HttpServletResponse
 
