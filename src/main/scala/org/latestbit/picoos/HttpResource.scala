@@ -23,6 +23,7 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	
 	private val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) )
 	private val allApiMethodsNames = allApiMethods.map(_.getName).sorted
+	var httpAuthenticator : Option[HttpAuthenticator] = None
 	    	
 	private def buildResourceApiRoutes(registry : HttpResourcesRegistry) = {
 		allApiMethods.foreach(item => {
@@ -36,7 +37,7 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 		  
 		  registry.registerHandler(
 		      resourcePath+handlerPath, 
-		      HttpResourceRequestHandler( methodDef.handler ).httpRequestHandler, 
+		      HttpResourceRequestHandler( this, handlerPath, methodDef.handler ).httpRequestHandler, 
 		      methodDef.httpMethod)		  
 		})
 	}
@@ -44,9 +45,12 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	def register() = {
 	  buildResourceApiRoutes(DefaultHttpResourcesRegistry)
 	}
-  
+	
 	def register(registry : HttpResourcesRegistry) = {
 	  buildResourceApiRoutes(registry)
 	}
 	
+	def protectWith(httpAuthenticator : HttpAuthenticator)  = {
+	  this.httpAuthenticator = Option(httpAuthenticator)
+	}
 }

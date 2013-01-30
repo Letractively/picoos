@@ -20,16 +20,26 @@ package org.latestbit.picoos
 import org.latestbit.picoos._
 import org.latestbit.picoos.dsl._
 
-case class HttpResourceRequestHandler(apiHandler : Option[ApiMethodBodyHandler]) {
+case class HttpResourceRequestHandler(resource : HttpResource, path : String, apiHandler : Option[ApiMethodBodyHandler]) {
 	  
-	  def httpRequestHandler(req: HttpResourceRequest, resp: HttpResourceResponse) = {
-	    val result : ApiMethodResult = apiHandler match {
-	      case Some(body : ApiMethodBodyHandlerNoParams) => body.handler
-	      case Some(body : ApiMethodBodyHandlerHttpRequest) => body.handler(req)
-	      case Some(body : ApiMethodBodyHandlerHttpRequestAndResponse) => body.handler(req, resp)
-	      case _ => throw new Exception("Found empty or wrong request handler!")
-	    }
-	    
-	    result.proceedHttpResponse( resp )
+	  def httpRequestHandler(req: HttpResourceRequest, resp: HttpResourceResponse) = {	    
+		val accessGranted : Boolean = (
+		    apiHandler.isDefined && apiHandler.get.restricted &&
+			  (resource.httpAuthenticator match {
+			    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path);
+			    case _ => throw new Exception("Restricted method at "+resource.resourcePath+" required authenticator");
+			  })
+		   ) || (apiHandler.isDefined && !apiHandler.get.restricted)
+		
+		if(accessGranted) {
+		    val result : ApiMethodResult = apiHandler match {
+		      case Some(body : ApiMethodBodyHandlerNoParams) => body.handler
+		      case Some(body : ApiMethodBodyHandlerHttpRequest) => body.handler(req)
+		      case Some(body : ApiMethodBodyHandlerHttpRequestAndResponse) => body.handler(req, resp)
+		      case _ => throw new Exception("Found empty or wrong request handler!")
+		    }
+		    
+		    result.proceedHttpResponse( resp )
+		}
 	  }	  
 }

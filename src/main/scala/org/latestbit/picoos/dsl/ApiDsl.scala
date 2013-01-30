@@ -69,13 +69,13 @@ case class httpErrorResult(errorCode : Int, errorString : String)  extends ApiMe
 }
 
 
-abstract class ApiMethodBodyHandler
+abstract class ApiMethodBodyHandler(val restricted : Boolean)
 
-class ApiMethodBodyHandlerNoParams(apiMethodBody : => ApiMethodResult) extends ApiMethodBodyHandler {
+class ApiMethodBodyHandlerNoParams(restricted : Boolean, apiMethodBody : => ApiMethodResult) extends ApiMethodBodyHandler(restricted) {
   lazy val handler = apiMethodBody
 }	
-case class ApiMethodBodyHandlerHttpRequest(val handler : (HttpResourceRequest)=> ApiMethodResult) extends ApiMethodBodyHandler
-case class ApiMethodBodyHandlerHttpRequestAndResponse(val handler : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) extends ApiMethodBodyHandler
+case class ApiMethodBodyHandlerHttpRequest(override val restricted : Boolean, val handler : (HttpResourceRequest)=> ApiMethodResult) extends ApiMethodBodyHandler(restricted)
+case class ApiMethodBodyHandlerHttpRequestAndResponse(override val restricted : Boolean, val handler : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) extends ApiMethodBodyHandler(restricted)
 
 
 trait ApiDsl {
@@ -87,18 +87,19 @@ trait ApiDsl {
 	}
 	
 	case class ApiMethodDef  (
+	    restricted : Boolean = false,
 	    path : Option[String] = None, 
 	    httpMethod : HttpMethod = HttpMethod.ANY_METHOD, 
 	    handler : Option[ApiMethodBodyHandler] = None) extends ApiMethod  {
 
 		def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(path, httpMethod, Option(new ApiMethodBodyHandlerNoParams(apiMethodBody)))
+		  ApiMethodDef(restricted, path, httpMethod, Option(new ApiMethodBodyHandlerNoParams(restricted,apiMethodBody)))
 		}
 		def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(path, httpMethod, Option(ApiMethodBodyHandlerHttpRequest(apiMethodBody)))
+		  ApiMethodDef(restricted, path, httpMethod, Option(ApiMethodBodyHandlerHttpRequest(restricted, apiMethodBody)))
 		}
 		def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(path, httpMethod, Option(ApiMethodBodyHandlerHttpRequestAndResponse(apiMethodBody)))
+		  ApiMethodDef(restricted, path, httpMethod, Option(ApiMethodBodyHandlerHttpRequestAndResponse(restricted, apiMethodBody)))
 		}
 		
 		def execute() = {
@@ -127,30 +128,35 @@ trait ApiDsl {
 		
 	} 
 	
-	
-	object apiMethod extends ApiMethod {	  
-
+	class ApiMethodImpl(val restricted : Boolean =false) extends ApiMethod {
 		def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerNoParams(apiMethodBody)))
+		  ApiMethodDef(restricted, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerNoParams(restricted,apiMethodBody)))
 		} 
 		def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(None, HttpMethod.ANY_METHOD, Option(ApiMethodBodyHandlerHttpRequest(apiMethodBody)))
+		  ApiMethodDef(restricted, None, HttpMethod.ANY_METHOD, Option(ApiMethodBodyHandlerHttpRequest(restricted,apiMethodBody)))
 		}
 		def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(None, HttpMethod.ANY_METHOD, Option(ApiMethodBodyHandlerHttpRequestAndResponse(apiMethodBody)))
+		  ApiMethodDef(restricted, None, HttpMethod.ANY_METHOD, Option(ApiMethodBodyHandlerHttpRequestAndResponse(restricted,apiMethodBody)))
 		}
 		
 		def apply : ApiMethodDef = {
-		  ApiMethodDef()
+		  ApiMethodDef(restricted)
 		}
 	  
 		def apply(path : String, httpMethod : HttpMethod = HttpMethod.ANY_METHOD) : ApiMethodDef = {
-		  ApiMethodDef(Option(path), httpMethod)
+		  ApiMethodDef(restricted, Option(path), httpMethod)
 		}
 		
 		def apply(httpMethod : HttpMethod) : ApiMethodDef = {
-		  ApiMethodDef(None, httpMethod)
-		}
-		
+		  ApiMethodDef(restricted, None, httpMethod)
+		}			
 	}
+	
+	object apiMethod extends ApiMethodImpl {	  
+	}
+	
+	object restrictedApiMethod extends ApiMethodImpl {	  
+	}
+	
+
 }
