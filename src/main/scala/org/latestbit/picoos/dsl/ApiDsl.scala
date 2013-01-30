@@ -155,7 +155,7 @@ trait ApiDsl {
 	object apiMethod extends ApiMethodImpl {	  
 	}
 	
-	object restrictedApiMethod extends ApiMethodImpl {	  
+	object restrictedApiMethod extends ApiMethodImpl(true) {	  
 	}
 	
 
