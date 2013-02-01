@@ -19,6 +19,10 @@ package org.latestbit.picoos
 
 import scala.collection.mutable.{Map, HashMap, SynchronizedMap}
 import org.latestbit.picoos.HttpMethod._
+import java.util.logging.Logger
+import java.util.logging.Level
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletResponse
 
 trait HttpResourcesRegistry {
 	def registerHandler(
@@ -27,12 +31,13 @@ trait HttpResourcesRegistry {
 		    httpMethod : HttpMethod = HttpMethod.ANY_METHOD)
 	
 	def findHandler (  httpMethod : HttpMethod, path : String ) : Option[(HttpResourceRequest, HttpResourceResponse) =>Unit]
-	
+	def proceedRequest( req : HttpResourceRequest , resp : HttpResourceResponse )
 	def clearAllHandlers()
 }
 
-object DefaultHttpResourcesRegistry extends HttpResourcesRegistry {
+class StdHttpResourcesRegistry extends HttpResourcesRegistry {
 	val KEY_DELIMETER="~"
+	private final val log : Logger  = Logger.getLogger(classOf[StdHttpResourcesRegistry].getName())
 	  
 	val handlersRegistry = new HashMap[String, 
 	  (HttpResourceRequest, HttpResourceResponse) =>Unit] with SynchronizedMap[String, (HttpResourceRequest, HttpResourceResponse) =>Unit]		
@@ -55,14 +60,42 @@ object DefaultHttpResourcesRegistry extends HttpResourcesRegistry {
 	  }	  
 	}
 	
+	def reverseFindHandler ( path : String ) : Option[(HttpResourceRequest, HttpResourceResponse) =>Unit] = {
+	  handlersRegistry.get(path) match {
+	    case res : Some[_] => res
+	    case _ => {
+	      val idx = path.lastIndexOf("/")
+	      if(idx != -1) {
+	        reverseFindHandler(path.substring(0, idx))
+	      }
+	      else
+	        None
+	    }
+	  }
+	}
+	
 	override def findHandler (  httpMethod : HttpMethod, path : String ) : Option[(HttpResourceRequest, HttpResourceResponse) =>Unit] = {	  
 	  handlersRegistry.get(httpMethod.toString() + KEY_DELIMETER +  path) match {
 	    case res : Some[_] => res
-	    case _ => handlersRegistry.get(path)
+	    case _ => reverseFindHandler(path) 
 	  }
 	}
+	
+	def proceedRequest(req : HttpResourceRequest , resp : HttpResourceResponse) = {
+	    try {	      
+	      findHandler( req.httpMethod, req.servicePath ) match {
+	        case Some(handler) => handler(req,resp )
+	        case _ => resp.http.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found any API handler at "+req.servicePath)
+	      }
+	    }
+	    catch{
+	      case ex: Exception => throw new ServletException(ex) 
+	    }      
+	  }	
 	
 	override def clearAllHandlers() = {
 	  handlersRegistry.clear()
 	}
 }
+
+object DefaultHttpResourcesRegistry extends StdHttpResourcesRegistry

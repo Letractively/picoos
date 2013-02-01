@@ -19,13 +19,30 @@ package org.latestbit.picoos
 
 import org.latestbit.picoos.dsl._
 
+trait HttpResourceCustomRequestHandler {
+  def proceedRequest(req: HttpResourceRequest, resource : HttpResource, path : String ) : Boolean
+}
+
+trait HttpResourceCustomResponseHandler {
+  def proceedRequest(req: HttpResourceRequest, resp: HttpResourceResponse, resource : HttpResource, path : String ) : Boolean
+}
+
 class HttpResource(val resourcePath : String) extends ApiDsl {
 	
 	private val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) )
 	private val allApiMethodsNames = allApiMethods.map(_.getName).sorted
+	var customRequestHandlers : List[HttpResourceCustomRequestHandler] = List()  
+	var customResponseHandlers : List[HttpResourceCustomResponseHandler] = List()
 	var httpAuthenticator : Option[HttpAuthenticator] = None
+	val localResourceRegistry = new StdHttpResourcesRegistry()
+	
+	protected def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
+	  localResourceRegistry.proceedRequest ( req, resp )
+	}
 	    	
 	private def buildResourceApiRoutes(registry : HttpResourcesRegistry) = {
+		localResourceRegistry.clearAllHandlers();
+		
 		allApiMethods.foreach(item => {
 		  
 		  val methodDef : ApiMethodDef = item.invoke(this).asInstanceOf[ApiMethodDef]
@@ -33,13 +50,15 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 		  val handlerPath = methodDef.path match {
 		    case Some(pathStr) => pathStr
 		    case _ => "/" + item.getName()
-		  }		  
+		  }
 		  
-		  registry.registerHandler(
+		  localResourceRegistry.registerHandler(
 		      resourcePath+handlerPath, 
-		      HttpResourceRequestHandler( this, handlerPath, methodDef.handler ).httpRequestHandler, 
+		      HttpResourceRequestAPIHandler( this, handlerPath, methodDef.handler ).httpRequestHandler, 
 		      methodDef.httpMethod)		  
 		})
+		
+		registry.registerHandler(resourcePath, proceedResourceRequest)
 	}
   
 	def register() = {
@@ -52,5 +71,21 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	
 	def protectWith(httpAuthenticator : HttpAuthenticator)  = {
 	  this.httpAuthenticator = Option(httpAuthenticator)
+	}
+	
+	def addCustomRequestHandler( handler : HttpResourceCustomRequestHandler ) = {
+	  customRequestHandlers = customRequestHandlers :+ handler
+	}
+	
+	def removeCustomRequestHandler( handler : HttpResourceCustomRequestHandler ) = {
+	  customRequestHandlers = customRequestHandlers.filterNot( _ == handler)
+	}
+
+	def addCustomResponseHandler( handler : HttpResourceCustomResponseHandler ) = {
+	  customResponseHandlers = customResponseHandlers :+ handler
+	}
+	
+	def removeCustomResponseHandler( handler : HttpResourceCustomResponseHandler ) = {
+	  customResponseHandlers = customResponseHandlers.filterNot( _ == handler)
 	}
 }

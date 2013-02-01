@@ -32,31 +32,31 @@ class MainServlet extends HttpServlet {
   val DEFAULT_API_CONTEXT = "/rest-api"
     
   override def doGet(req : HttpServletRequest , resp : HttpServletResponse) = {
-    processRequest(HttpMethod.GET,req,resp)
+    proceedRequest(HttpMethod.GET,req,resp)
   }
   
   override def doPut(req : HttpServletRequest , resp : HttpServletResponse) = {
-    processRequest(HttpMethod.PUT,req,resp)
+    proceedRequest(HttpMethod.PUT,req,resp)
   }  
 
   override def doPost(req : HttpServletRequest , resp : HttpServletResponse) = {
-    processRequest(HttpMethod.POST,req,resp)
+    proceedRequest(HttpMethod.POST,req,resp)
   }  
 
   override def doDelete(req : HttpServletRequest , resp : HttpServletResponse) = {
-	  processRequest(HttpMethod.DELETE,req,resp)
+	  proceedRequest(HttpMethod.DELETE,req,resp)
   }
   
   override def doTrace(req : HttpServletRequest , resp : HttpServletResponse) = {
-	  processRequest(HttpMethod.TRACE,req,resp)
+	  proceedRequest(HttpMethod.TRACE,req,resp)
   }
   
   override def doHead(req : HttpServletRequest , resp : HttpServletResponse) = {
-	  processRequest(HttpMethod.HEAD,req,resp)
+	  proceedRequest(HttpMethod.HEAD,req,resp)
   }
   
   override def doOptions(req : HttpServletRequest , resp : HttpServletResponse) = {
-	  processRequest(HttpMethod.OPTIONS,req,resp)
+	  proceedRequest(HttpMethod.OPTIONS,req,resp)
   }  
   
   def getAPIPathPrefix()  : String = {
@@ -91,25 +91,25 @@ class MainServlet extends HttpServlet {
     })
 
   }
-  
-  def processRequest(httpMethod : HttpMethod, req : HttpServletRequest , resp : HttpServletResponse) = {
-    val requestUri = req.getRequestURI()
-    val apiPathPrefix = getAPIPathPrefix()
-    val idx = requestUri.lastIndexOf(apiPathPrefix)
-    if(idx != -1) {
-    	val fullPath = requestUri.substring(idx)
-    	val servicePath = fullPath.replaceFirst(apiPathPrefix, "")
-	    try {	      
-	      registry.findHandler(httpMethod, servicePath) match {
-	        case Some(handler) => handler(HttpResourceRequest(httpMethod,req, apiPathPrefix, getServletConfig()),HttpResourceResponse(resp))
-	        case _ => resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found any API handler at "+servicePath)
-	      }
+     
+  def proceedRequest(httpMethod : HttpMethod, req : HttpServletRequest , resp : HttpServletResponse) = {
+    	val requestUri = req.getRequestURI()
+	    val apiPathPrefix = getAPIPathPrefix()
+	    val idx = requestUri.lastIndexOf(apiPathPrefix)
+	    if(idx != -1) {
+	    	val fullPath = requestUri.substring(idx)
+	    	val servicePath = fullPath.replaceFirst(apiPathPrefix, "")
+	    	val resourceReq = HttpResourceRequest(	    			
+		            req,
+		            httpMethod,
+		            servicePath,
+		            apiPathPrefix, 
+		            getServletConfig()
+		    )
+		    val resourceResp = HttpResourceResponse(resp)
+	    	registry.proceedRequest( resourceReq, resourceResp )		          
 	    }
-	    catch{
-	      case ex: Exception => throw new ServletException(ex) 
-	    }      
-    }
-    else
-      log.log(Level.WARNING,"Unable to process request to empty or unknow prefix ("+requestUri+")")
-  }  
+	    else
+	      log.log(Level.WARNING,"Unable to process request to empty or unknow prefix ("+requestUri+")")
+  }
 }

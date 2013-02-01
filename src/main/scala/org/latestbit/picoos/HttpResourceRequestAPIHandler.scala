@@ -20,7 +20,7 @@ package org.latestbit.picoos
 import org.latestbit.picoos._
 import org.latestbit.picoos.dsl._
 
-case class HttpResourceRequestHandler(resource : HttpResource, path : String, apiHandler : Option[ApiMethodBodyHandler]) {
+case class HttpResourceRequestAPIHandler(resource : HttpResource, path : String, apiHandler : Option[ApiMethodBodyHandler]) {
 	  
 	  def httpRequestHandler(req: HttpResourceRequest, resp: HttpResourceResponse) = {	    
 		val accessGranted : Boolean = (

@@ -21,9 +21,10 @@ import javax.servlet.http.HttpServletRequest
 import org.latestbit.picoos.HttpMethod._
 import javax.servlet.ServletConfig
 
-case class HttpResourceRequest(
-    val httpMethod : HttpMethod, 
+case class HttpResourceRequest(    
     val http : HttpServletRequest,
+    val httpMethod : HttpMethod, 
+    val servicePath : String,
     val servletPrefix : String,
     val servletConfig : ServletConfig) {  	
 }
