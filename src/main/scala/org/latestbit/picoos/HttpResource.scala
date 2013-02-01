@@ -20,11 +20,11 @@ package org.latestbit.picoos
 import org.latestbit.picoos.dsl._
 
 trait HttpResourceCustomRequestHandler {
-  def proceedRequest(req: HttpResourceRequest, resource : HttpResource, path : String ) : Boolean
+  def proceedRequest(req: HttpResourceRequest, resource : HttpResource ) : Boolean
 }
 
 trait HttpResourceCustomResponseHandler {
-  def proceedRequest(req: HttpResourceRequest, resp: HttpResourceResponse, resource : HttpResource, path : String ) : Boolean
+  def proceedRequest(req: HttpResourceRequest, resp: HttpResourceResponse, resource : HttpResource ) : Boolean
 }
 
 class HttpResource(val resourcePath : String) extends ApiDsl {
@@ -37,7 +37,12 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	val localResourceRegistry = new StdHttpResourcesRegistry()
 	
 	protected def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
-	  localResourceRegistry.proceedRequest ( req, resp )
+	  val processedHandlers = customRequestHandlers.takeWhile( item => item.proceedRequest(req, this ))
+	  
+	  if(processedHandlers.length == customRequestHandlers.length)
+		  localResourceRegistry.proceedRequest ( req, resp )
+		  
+	  customResponseHandlers.takeWhile( item => item.proceedRequest(req, resp, this ))
 	}
 	    	
 	private def buildResourceApiRoutes(registry : HttpResourcesRegistry) = {
