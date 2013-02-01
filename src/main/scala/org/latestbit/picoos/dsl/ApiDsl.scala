@@ -22,26 +22,34 @@ import org.latestbit.picoos.HttpMethod._
 import com.codahale.jerkson._
 import scala.xml.Node
 
-abstract class ApiMethodResult {
-  def proceedHttpResponse(resp : HttpResourceResponse) = {}
+abstract class ApiMethodResult(val noCache : Boolean) {
+  def proceedHttpResponse(resp : HttpResourceResponse) = {
+    if(noCache) {
+      resp.http.setHeader("Cache-Control",  "no-cache, no-store, must-revalidate")
+      resp.http.setHeader("Pragma",  "no-cache")
+      resp.http.setHeader("Expires",  "0")
+    }      
+  }
 }
 
-case class httpOkResult() extends ApiMethodResult
-object httpOkResult extends httpOkResult
-case class httpNoResult() extends ApiMethodResult
-object httpNoResult extends httpNoResult
+case class httpOkResult(override val noCache : Boolean=false) extends ApiMethodResult(noCache)
+object httpOkResult extends httpOkResult(false)
+case class httpNoResult(override val noCache : Boolean=false) extends ApiMethodResult(noCache)
+object httpNoResult extends httpNoResult(false)
 
-case class httpTextResult(textResult : String) extends ApiMethodResult {
+case class httpTextResult(textResult : String, override val noCache : Boolean=false) extends ApiMethodResult(noCache) {
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
+	   super.proceedHttpResponse(resp)
 	   resp.http.setContentType("text/plain")
 	   resp.http.getWriter().append(textResult)
-	   resp.http.getWriter().flush()    
+	   resp.http.getWriter().flush()	   
   }
 } 
-case class httpJsonResult[T<:AnyRef](jsonObj : T) extends ApiMethodResult {
+case class httpJsonResult[T<:AnyRef](jsonObj : T, override val noCache : Boolean=false) extends ApiMethodResult(noCache) {
   lazy val textResult = Json.generate(jsonObj)
 
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
+	  super.proceedHttpResponse(resp)
       resp.http.setContentType("application/json")
       resp.http.getWriter().append(textResult)
       resp.http.getWriter().flush()
@@ -49,21 +57,24 @@ case class httpJsonResult[T<:AnyRef](jsonObj : T) extends ApiMethodResult {
   
 }
 
-case class httpXmlResult(xmlObj : Node) extends ApiMethodResult  {
+case class httpXmlResult(xmlObj : Node, override val noCache : Boolean=false) extends ApiMethodResult(noCache)  {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
+	  super.proceedHttpResponse(resp)
       resp.http.setContentType("text/xml")
       scala.xml.XML.write(resp.http.getWriter(), xmlObj, "utf-8", true, null)
       resp.http.getWriter().flush()
 	}  
 }
-case class httpRedirectResult(url : String)  extends ApiMethodResult {
+case class httpRedirectResult(url : String, override val noCache : Boolean=false)  extends ApiMethodResult(noCache) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
+		super.proceedHttpResponse(resp)	  
 		resp.http.sendRedirect( url )	  
 	}
 }
 
-case class httpErrorResult(errorCode : Int, errorString : String)  extends ApiMethodResult {
+case class httpErrorResult(errorCode : Int, errorString : String, override val noCache : Boolean=false)  extends ApiMethodResult(noCache) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
+		super.proceedHttpResponse(resp)
 		resp.http.sendError(errorCode, errorString)	  
 	}
 }
