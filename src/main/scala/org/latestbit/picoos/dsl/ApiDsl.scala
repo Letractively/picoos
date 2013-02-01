@@ -22,22 +22,28 @@ import org.latestbit.picoos.HttpMethod._
 import com.codahale.jerkson._
 import scala.xml.Node
 
-abstract class ApiMethodResult(val noCache : Boolean) {
+
+case class CachingStrategy(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
+
+abstract class ApiMethodResult(val cacheFlags : CachingStrategy) {
   def proceedHttpResponse(resp : HttpResourceResponse) = {
-    if(noCache) {
+    if(cacheFlags.noCacheMode) {
       resp.http.setHeader("Cache-Control",  "no-cache, no-store, must-revalidate")
       resp.http.setHeader("Pragma",  "no-cache")
-      resp.http.setHeader("Expires",  "0")
-    }      
+      resp.http.setDateHeader("Expires",  0)
+    }
+    if(cacheFlags.privateCacheMode) {
+      resp.http.setHeader("Cache-Control", "private")
+    }
   }
 }
 
-case class httpOkResult(override val noCache : Boolean=false) extends ApiMethodResult(noCache)
-object httpOkResult extends httpOkResult(false)
-case class httpNoResult(override val noCache : Boolean=false) extends ApiMethodResult(noCache)
-object httpNoResult extends httpNoResult(false)
+case class httpOkResult(override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags)
+object httpOkResult extends httpOkResult(CachingStrategy())
+case class httpNoResult(override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags)
+object httpNoResult extends httpNoResult(CachingStrategy())
 
-case class httpTextResult(textResult : String, override val noCache : Boolean=false) extends ApiMethodResult(noCache) {
+case class httpTextResult(textResult : String, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags) {
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	   super.proceedHttpResponse(resp)
 	   resp.http.setContentType("text/plain")
@@ -45,7 +51,7 @@ case class httpTextResult(textResult : String, override val noCache : Boolean=fa
 	   resp.http.getWriter().flush()	   
   }
 } 
-case class httpJsonResult[T<:AnyRef](jsonObj : T, override val noCache : Boolean=false) extends ApiMethodResult(noCache) {
+case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags) {
   lazy val textResult = Json.generate(jsonObj)
 
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
@@ -53,11 +59,10 @@ case class httpJsonResult[T<:AnyRef](jsonObj : T, override val noCache : Boolean
       resp.http.setContentType("application/json")
       resp.http.getWriter().append(textResult)
       resp.http.getWriter().flush()
-  }
-  
+  }  
 }
 
-case class httpXmlResult(xmlObj : Node, override val noCache : Boolean=false) extends ApiMethodResult(noCache)  {
+case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags)  {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
       resp.http.setContentType("text/xml")
@@ -65,20 +70,19 @@ case class httpXmlResult(xmlObj : Node, override val noCache : Boolean=false) ex
       resp.http.getWriter().flush()
 	}  
 }
-case class httpRedirectResult(url : String, override val noCache : Boolean=false)  extends ApiMethodResult(noCache) {
+case class httpRedirectResult(url : String, override val cacheFlags : CachingStrategy= CachingStrategy())  extends ApiMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)	  
 		resp.http.sendRedirect( url )	  
 	}
 }
 
-case class httpErrorResult(errorCode : Int, errorString : String, override val noCache : Boolean=false)  extends ApiMethodResult(noCache) {
+case class httpErrorResult(errorCode : Int, errorString : String, override val cacheFlags : CachingStrategy= CachingStrategy())  extends ApiMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)
 		resp.http.sendError(errorCode, errorString)	  
 	}
 }
-
 
 abstract class ApiMethodBodyHandler(val restricted : Boolean)
 
