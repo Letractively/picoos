@@ -27,13 +27,17 @@ class HttpResourcesRegistryTests extends FeatureSpec  {
   	  val httpResource = new TestHttpResource()
   	  httpResource.register()
 	  scenario("Check registered handlers") {
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/unknown") == None)
+  	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.GET, "/resource1/unknown") == None )
+  	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.GET, "/resource1/getUsers") != None )
+  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/unknown") != None)
   	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/getUsers") != None)
   	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2") == None)
+  	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2") == None )
+  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2") != None)
   	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2Mapped") != None)
   	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers3") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers4") == None)
+  	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers4") == None )
+  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers4") != None)
   	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/getUsers4") != None)
   	  }
   	}

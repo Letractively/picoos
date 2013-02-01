@@ -19,11 +19,7 @@ package org.latestbit.picoos
 
 import org.latestbit.picoos.dsl._
 
-trait HttpResourceCustomRequestHandler {
-  def proceedRequest(req: HttpResourceRequest, resource : HttpResource ) : Boolean
-}
-
-trait HttpResourceCustomResponseHandler {
+trait HttpResourceCustomHandler {
   def proceedRequest(req: HttpResourceRequest, resp: HttpResourceResponse, resource : HttpResource ) : Boolean
 }
 
@@ -31,18 +27,15 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	
 	private val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) )
 	private val allApiMethodsNames = allApiMethods.map(_.getName).sorted
-	var customRequestHandlers : List[HttpResourceCustomRequestHandler] = List()  
-	var customResponseHandlers : List[HttpResourceCustomResponseHandler] = List()
+	var customHandlers : List[HttpResourceCustomHandler] = List()  
 	var httpAuthenticator : Option[HttpAuthenticator] = None
 	val localResourceRegistry = new StdHttpResourcesRegistry()
 	
 	protected def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
-	  val processedHandlers = customRequestHandlers.takeWhile( item => item.proceedRequest(req, this ))
+	  val processedHandlers = customHandlers.takeWhile( item => item.proceedRequest(req, resp, this ))
 	  
-	  if(processedHandlers.length == customRequestHandlers.length)
+	  if(processedHandlers.length == customHandlers.length)
 		  localResourceRegistry.proceedRequest ( req, resp )
-		  
-	  customResponseHandlers.takeWhile( item => item.proceedRequest(req, resp, this ))
 	}
 	    	
 	private def buildResourceApiRoutes(registry : HttpResourcesRegistry) = {
@@ -78,19 +71,12 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	  this.httpAuthenticator = Option(httpAuthenticator)
 	}
 	
-	def addCustomRequestHandler( handler : HttpResourceCustomRequestHandler ) = {
-	  customRequestHandlers = customRequestHandlers :+ handler
+	def addCustomHandler( handler : HttpResourceCustomHandler ) = {
+	  customHandlers = customHandlers :+ handler
 	}
 	
-	def removeCustomRequestHandler( handler : HttpResourceCustomRequestHandler ) = {
-	  customRequestHandlers = customRequestHandlers.filterNot( _ == handler)
+	def removeCustomRequestHandler( handler : HttpResourceCustomHandler ) = {
+	  customHandlers = customHandlers.filterNot( _ == handler)
 	}
 
-	def addCustomResponseHandler( handler : HttpResourceCustomResponseHandler ) = {
-	  customResponseHandlers = customResponseHandlers :+ handler
-	}
-	
-	def removeCustomResponseHandler( handler : HttpResourceCustomResponseHandler ) = {
-	  customResponseHandlers = customResponseHandlers.filterNot( _ == handler)
-	}
 }
