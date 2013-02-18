@@ -29,16 +29,19 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	private val allApiMethodsNames = allApiMethods.map(_.getName).sorted
 	var customHandlers : List[HttpResourceCustomHandler] = List()  
 	var httpAuthenticator : Option[HttpAuthenticator] = None
-	val localResourceRegistry = new StdHttpResourcesRegistry()
+	val localResourceRegistry = new StdHttpResourcesRegistry("{"+resourcePath+"} Registry")
+	
+	protected def proceedResourceCustomHandlers( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Boolean = {
+	  val processedHandlers = customHandlers.takeWhile( item => item.proceedRequest(req, resp, this ))	  
+	  processedHandlers.length == customHandlers.length
+	}
 	
 	protected def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
-	  val processedHandlers = customHandlers.takeWhile( item => item.proceedRequest(req, resp, this ))
-	  
-	  if(processedHandlers.length == customHandlers.length)
-		  localResourceRegistry.proceedRequest ( req, resp )
+	  if(proceedResourceCustomHandlers(req,resp))
+		localResourceRegistry.proceedRequest ( req, resp )
 	}
 	    	
-	private def buildResourceApiRoutes(registry : HttpResourcesRegistry) = {
+	protected def buildResourceApiRoutes(registry : HttpResourcesRegistry) = {
 		localResourceRegistry.clearAllHandlers();
 		
 		allApiMethods.foreach(item => {
@@ -59,24 +62,40 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 		registry.registerHandler(resourcePath, proceedResourceRequest)
 	}
   
-	def register() = {
+	/*def register() : HttpResource = {
 	  buildResourceApiRoutes(DefaultHttpResourcesRegistry)
-	}
+	  this
+	}*/
 	
-	def register(registry : HttpResourcesRegistry) = {
+	def register(registry : HttpResourcesRegistry) : HttpResource = {
 	  buildResourceApiRoutes(registry)
+	  this
 	}
 	
-	def protectWith(httpAuthenticator : HttpAuthenticator)  = {
+	def protectWith(httpAuthenticator : HttpAuthenticator) : HttpResource  = {
 	  this.httpAuthenticator = Option(httpAuthenticator)
+	  this
 	}
 	
-	def addCustomHandler( handler : HttpResourceCustomHandler ) = {
+	def addCustomHandler( handler : HttpResourceCustomHandler ) : HttpResource = {
 	  customHandlers = customHandlers :+ handler
+	  this
 	}
 	
-	def removeCustomRequestHandler( handler : HttpResourceCustomHandler ) = {
+	def removeCustomRequestHandler( handler : HttpResourceCustomHandler ) : HttpResource = {
 	  customHandlers = customHandlers.filterNot( _ == handler)
+	  this
 	}
+}
 
+abstract class HttpProxyResource(resourcePath : String) extends HttpResource(resourcePath) {
+  
+  override def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
+    if(proceedResourceCustomHandlers(req,resp))
+      if(!dispatch(req,resp))
+    	  localResourceRegistry.proceedRequest ( req, resp )
+  }
+  
+  protected def dispatch(req : HttpResourceRequest, resp : HttpResourceResponse ) : Boolean
+  
 }

@@ -23,22 +23,22 @@ import org.latestbit.picoos.tests.model._
 
 class HttpResourcesRegistryTests extends FeatureSpec  {
   	feature("Common HttpResourcesRegistry Functionality") {
-  	  DefaultHttpResourcesRegistry.clearAllHandlers()
+  	  val resitry = new StdHttpResourcesRegistry("Test Registry") // DefaultHttpResourcesRegistry.clearAllHandlers()
   	  val httpResource = new TestHttpResource()
-  	  httpResource.register()
+  	  httpResource.register(resitry)
 	  scenario("Check registered handlers") {
   	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.GET, "/resource1/unknown") == None )
   	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.GET, "/resource1/getUsers") != None )
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/unknown") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/getUsers") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers") != None)
+  	    assert ( resitry.findHandler(HttpMethod.GET, "/resource1/unknown") != None)
+  	    assert ( resitry.findHandler(HttpMethod.GET, "/resource1/getUsers") != None)
+  	    assert ( resitry.findHandler(HttpMethod.POST, "/resource1/getUsers") != None)
   	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2") == None )
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers2Mapped") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers3") != None)
+  	    assert ( resitry.findHandler(HttpMethod.POST, "/resource1/getUsers2") != None)
+  	    assert ( resitry.findHandler(HttpMethod.POST, "/resource1/getUsers2Mapped") != None)
+  	    assert ( resitry.findHandler(HttpMethod.POST, "/resource1/getUsers3") != None)
   	    assert ( httpResource.localResourceRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers4") == None )
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.POST, "/resource1/getUsers4") != None)
-  	    assert ( DefaultHttpResourcesRegistry.findHandler(HttpMethod.GET, "/resource1/getUsers4") != None)
+  	    assert ( resitry.findHandler(HttpMethod.POST, "/resource1/getUsers4") != None)
+  	    assert ( resitry.findHandler(HttpMethod.GET, "/resource1/getUsers4") != None)
   	  }
   	}
 }

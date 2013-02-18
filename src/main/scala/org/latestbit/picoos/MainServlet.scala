@@ -61,12 +61,12 @@ class MainServlet extends HttpServlet {
   
   def getAPIPathPrefix()  : String = {
     Option(getServletConfig().getInitParameter("api-prefix")) match {
-      case Some(str : String) => str
+      case Some(str : String) => str.trim() 
       case _ => DEFAULT_API_CONTEXT
     }
   }
   
-  var registry : HttpResourcesRegistry = null
+  var registry : HttpResourcesRegistry = null  
   
   override def init() = {
     super.init()
@@ -76,7 +76,7 @@ class MainServlet extends HttpServlet {
     	val registryClass = Class.forName(registryClassName.trim())
     	registryClass.newInstance().asInstanceOf[HttpResourcesRegistry]        
       }
-      case _ => DefaultHttpResourcesRegistry      
+      case _ => new StdHttpResourcesRegistry("Default Registry for {"+getAPIPathPrefix+"}")      
     }
     
     val resourcesFactory : String = getServletConfig().getInitParameter("resources-factory-classes")
@@ -95,10 +95,16 @@ class MainServlet extends HttpServlet {
   def proceedRequest(httpMethod : HttpMethod, req : HttpServletRequest , resp : HttpServletResponse) = {
     	val requestUri = req.getRequestURI()
 	    val apiPathPrefix = getAPIPathPrefix()
-	    val idx = requestUri.lastIndexOf(apiPathPrefix)
+	    val idx = requestUri.indexOf(apiPathPrefix)
 	    if(idx != -1) {
 	    	val fullPath = requestUri.substring(idx)
-	    	val servicePath = fullPath.replaceFirst(apiPathPrefix, "")
+	    	val servicePath = fullPath.replaceFirst(
+	    	    apiPathPrefix, 
+	    	    apiPathPrefix match {
+	    	      case "/" => "/"
+	    	      case _ => ""
+	    	    }
+	    	)
 	    	val resourceReq = HttpResourceRequest(	    			
 		            req,
 		            httpMethod,
@@ -109,7 +115,9 @@ class MainServlet extends HttpServlet {
 		    val resourceResp = HttpResourceResponse(resp)
 	    	registry.proceedRequest( resourceReq, resourceResp )		          
 	    }
-	    else
-	      log.log(Level.WARNING,"Unable to process request to empty or unknow prefix ("+requestUri+")")
-  }
+	    else {
+	      log.log(Level.WARNING,"Unable to process request to empty or unknow prefix ("+requestUri+"). Check your web.xml settings!")
+	      resp.sendError(404, "Unable to process request to empty or unknow prefix ("+requestUri+")")
+	    }
+   }
 }

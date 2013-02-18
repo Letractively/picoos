@@ -35,7 +35,7 @@ trait HttpResourcesRegistry {
 	def clearAllHandlers()
 }
 
-class StdHttpResourcesRegistry extends HttpResourcesRegistry {
+class StdHttpResourcesRegistry(val registryName : String) extends HttpResourcesRegistry {
 	val KEY_DELIMETER="~"
 	private final val log : Logger  = Logger.getLogger(classOf[StdHttpResourcesRegistry].getName())
 	  
@@ -85,7 +85,11 @@ class StdHttpResourcesRegistry extends HttpResourcesRegistry {
 	    try {	      
 	      findHandler( req.httpMethod, req.servicePath ) match {
 	        case Some(handler) => handler(req,resp )
-	        case _ => resp.http.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found any API handler at "+req.servicePath)
+	        case _ => resp.http.sendError(
+	            HttpServletResponse.SC_NOT_FOUND, 
+	            "Not found any API handler at '"+req.servicePath
+	            +"'. Registry: "+registryName
+	            +". Size: "+handlersRegistry.size)
 	      }
 	    }
 	    catch{
@@ -98,4 +102,4 @@ class StdHttpResourcesRegistry extends HttpResourcesRegistry {
 	}
 }
 
-object DefaultHttpResourcesRegistry extends StdHttpResourcesRegistry
+//object DefaultHttpResourcesRegistry extends StdHttpResourcesRegistry("Default Registry")
