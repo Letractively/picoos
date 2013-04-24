@@ -106,32 +106,32 @@ abstract class HttpCanonicalResource(resourcePath : String) extends HttpResource
 	    else {
 			// Check canonical paths
 		    val idxResPathStr = req.servicePath.indexOf(resourcePath)
-		    val resourceId = req.servicePath.substring(idxResPathStr)
+		    val resourceId = req.servicePath.substring(idxResPathStr+resourcePath.length()) match {
+		      case "" | "/" => "/"
+		      case str : String if(str.startsWith("/")) => str.substring(1)
+		      case str : String => str
+		    }
 		    
 		    val canonicalResult : ApiMethodResult = req.httpMethod match {
 		      case HttpMethod.GET =>
 		        resourceId match {
-		        	case "" | "/" => listCollection(req, resp)
-		        	case str : String => getElement(resourceId, req, resp)
-		        	case _ => httpErrorResult(500, "Unknown error")
+		          case "/" => listCollection(req, resp)
+		          case str : String => getElement(resourceId, req, resp)
 		        }
 		      case HttpMethod.PUT =>
 		        resourceId match {
-		          case "" | "/" => replaceCollection(req, resp)
+		          case "/" => replaceCollection(req, resp)
 		          case str : String => replaceElement(resourceId, req, resp)
-		          case _ => httpErrorResult(500, "Unknown error")
 		        }
 		      case HttpMethod.POST =>
 		        resourceId match {
-		          case "" | "/" => createNewElement(req, resp)
+		          case "/" => createNewElement(req, resp)
 		          case str : String => replaceElement(resourceId, req, resp)
-		          case _ => httpErrorResult(500, "Unknown error")
 		        }
 		      case HttpMethod.DELETE =>
 		        resourceId match {
-		          case "" | "/" => deleteCollection(req, resp)
+		          case "/" => deleteCollection(req, resp)
 		          case str : String => deleteElement(resourceId, req, resp)
-		          case _ => httpErrorResult(500, "Unknown error")
 		        }	        
 		      case _ => httpErrorResult(404, "Method is not supported for canonical RESTful service!")
 		    }
