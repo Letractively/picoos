@@ -59,3 +59,44 @@ class TestHttpResource extends HttpResource("/resource1") {
   }
   
 }
+
+class TestProxyResources extends HttpProxyResource("/web") {
+  
+  def ttt = apiMethod as { req : HttpResourceRequest  =>
+    httpTextResult("Hello from Picoos! " + req.servicePath )
+  }
+  
+  override def dispatch(req : HttpResourceRequest, resp : HttpResourceResponse ) : Boolean = {        
+    val dispatchPath = "/html"+ req.servicePath.replace( this.resourcePath, "") +".html"
+    req.http.getRequestDispatcher(dispatchPath).forward(req.http, resp.http)
+    true
+  }
+}
+
+class TestCanonicalRestful extends HttpCanonicalResource("/cres") {
+  
+  def ttt = apiMethod as { req : HttpResourceRequest  =>
+    httpTextResult("Hello from Picoos! " + req.servicePath )
+  }
+  
+  override def listCollection(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+    httpJsonResult(TestJson("Test") :: Nil)    
+  }	
+
+  override def createNewElement(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+    httpOkResult
+  }
+
+  override def getElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+    httpJsonResult(TestJson("Test"))
+  } 
+
+  override def replaceElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+    httpOkResult
+  }	
+
+  override def deleteElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+    httpOkResult
+  }
+  
+}
