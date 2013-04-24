@@ -81,6 +81,10 @@ class StdHttpResourcesRegistry(val registryName : String) extends HttpResourcesR
 	  }
 	}
 	
+	def hasHandler(req : HttpResourceRequest) : Boolean = {
+	  findHandler( req.httpMethod, req.servicePath ).isDefined
+	}
+	
 	def proceedRequest(req : HttpResourceRequest , resp : HttpResourceResponse) = {
 	    try {	      
 	      findHandler( req.httpMethod, req.servicePath ) match {
