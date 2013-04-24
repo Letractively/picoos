@@ -38,3 +38,4 @@ packageOptions := Seq(ManifestAttributes(
 	("Build-Date" , new java.text.SimpleDateFormat("MMddyyyy-hhmm").format(java.util.Calendar.getInstance().getTime()))
 ))
 
+retrieveManaged := true
