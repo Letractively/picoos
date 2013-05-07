@@ -79,23 +79,23 @@ class TestCanonicalRestful extends HttpCanonicalResource("/cres") {
     httpTextResult("Hello from Picoos! " + req.servicePath )
   }
   
-  override def listCollection(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+  override def $list = apiMethod as{
     httpJsonResult(TestJson("Test") :: Nil)    
   }	
 
-  override def createNewElement(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+  override def $newResource = apiMethod as {
     httpOkResult
   }
 
-  override def getElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+  override def $getResource( resourceId : String) = apiMethod as {
     httpJsonResult(TestJson("Test"))
   } 
 
-  override def replaceElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+  override def $replaceResource( resourceId : String) = apiMethod as {
     httpOkResult
   }	
 
-  override def deleteElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+  override def $deleteResource( resourceId : String) = apiMethod as {
     httpOkResult
   }
   

@@ -25,8 +25,7 @@ trait HttpResourceCustomHandler {
 
 class HttpResource(val resourcePath : String) extends ApiDsl {
 	
-	private val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) )
-	private val allApiMethodsNames = allApiMethods.map(_.getName).sorted
+	protected val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) && !method.getName().startsWith("$") )
 	var customHandlers : List[HttpResourceCustomHandler] = List()  
 	var httpAuthenticator : Option[HttpAuthenticator] = None
 	val localResourceRegistry = new StdHttpResourcesRegistry("{"+resourcePath+"} Registry")
@@ -55,7 +54,7 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 		  
 		  localResourceRegistry.registerHandler(
 		      resourcePath+handlerPath, 
-		      HttpResourceRequestAPIHandler( this, handlerPath, methodDef.handler ).httpRequestHandler, 
+		      HttpResourceExecutor( this, handlerPath, methodDef.handler ).execute, 
 		      methodDef.httpMethod)		  
 		})
 		
@@ -95,15 +94,19 @@ abstract class HttpProxyResource(resourcePath : String) extends HttpResource(res
   
 }
 
-abstract class HttpCanonicalResource(resourcePath : String) extends HttpResource(resourcePath) {
+abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName : String = "f") extends HttpResource(resourcePath) {
 	
 	override def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
 	  if(proceedResourceCustomHandlers(req,resp)) {
-	    
-	    if(localResourceRegistry.hasHandler( req)) {
-	      localResourceRegistry.proceedRequest ( req, resp )
+	    val additionalMethodParam = req.http.getParameter(extMethodsParamName)
+	    if(additionalMethodParam!=null) {
+	    	val serviceFuncPath = additionalMethodParam match {
+	    	  case s:String if additionalMethodParam.startsWith("/") => s
+	    	  case s:String => "/"+s
+	    	} 
+	    	localResourceRegistry.proceedRequest ( req, resp, req.servicePath+serviceFuncPath )
 	    }
-	    else {
+		else {
 			// Check canonical paths
 		    val idxResPathStr = req.servicePath.indexOf(resourcePath)
 		    val resourceId = req.servicePath.substring(idxResPathStr+resourcePath.length()) match {
@@ -112,45 +115,59 @@ abstract class HttpCanonicalResource(resourcePath : String) extends HttpResource
 		      case str : String => str
 		    }
 		    
-		    val canonicalResult : ApiMethodResult = req.httpMethod match {
+		    val canonicalMethodBody : Option[ApiMethodBodyHandler] = req.httpMethod match {		      
 		      case HttpMethod.GET =>
 		        resourceId match {
-		          case "/" => listCollection(req, resp)
-		          case str : String => getElement(resourceId, req, resp)
+		          case "/" => $list.handler
+		          case str : String => $getResource(resourceId).handler
 		        }
 		      case HttpMethod.PUT =>
 		        resourceId match {
-		          case "/" => replaceCollection(req, resp)
-		          case str : String => replaceElement(resourceId, req, resp)
+		          case "/" => $replaceAll.handler
+		          case str : String => $replaceResource(resourceId).handler
 		        }
 		      case HttpMethod.POST =>
 		        resourceId match {
-		          case "/" => createNewElement(req, resp)
-		          case str : String => replaceElement(resourceId, req, resp)
+		          case "/" => $newResource.handler
+		          case str : String => $replaceResource(resourceId).handler
 		        }
 		      case HttpMethod.DELETE =>
 		        resourceId match {
-		          case "/" => deleteCollection(req, resp)
-		          case str : String => deleteElement(resourceId, req, resp)
+		          case "/" => $deleteAll.handler
+		          case str : String => $deleteResource(resourceId).handler
 		        }	        
-		      case _ => httpErrorResult(404, "Method is not supported for canonical RESTful service!")
+		        
+		      case HttpMethod.OPTIONS => $opt(resourceId).handler
+		      case HttpMethod.HEAD => $head(resourceId).handler
+		      case _ => None
 		    }
 		    
-		    canonicalResult.proceedHttpResponse(resp)
-		    
-	    }		
-	  }
+		    canonicalMethodBody match {
+		      case Some(handler : ApiMethodBodyHandler) => HttpResourceExecutor(this, req.servicePath, canonicalMethodBody).execute(req, resp)
+		      case _ => httpErrorResult(404, "Method is not supported for canonical RESTful service!")
+		    }
+		  }
+	   }
 	}
 	
-	def listCollection(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult	
-	def replaceCollection(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
+	def $list : ApiMethodDef
+	def $replaceAll : ApiMethodDef = apiMethod as {
 	  httpErrorResult(501, "Method replace collection is not implemented!")
 	}
-	def deleteCollection(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult = {
-	  httpErrorResult(501, "Method delete full collection is not implemented!")
+	def $deleteAll : ApiMethodDef = apiMethod as {
+	  httpErrorResult(501, "Method delete all collection is not implemented!")
 	}
-	def createNewElement(req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult
-	def getElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult 
-	def replaceElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult	
-	def deleteElement( resourceId : String, req : HttpResourceRequest, resp : HttpResourceResponse ) : ApiMethodResult
+	def $newResource: ApiMethodDef
+	def $getResource( resourceId : String ) : ApiMethodDef
+	def $replaceResource( resourceId : String) : ApiMethodDef	
+	def $deleteResource( resourceId : String) : ApiMethodDef
+	
+	def $opt( resourceId : String ) : ApiMethodDef = apiMethod as {
+	  httpOkResult
+	}
+	
+	def $head( resourceId : String ) : ApiMethodDef = apiMethod as {
+	  httpOkResult
+	}
+	
 }

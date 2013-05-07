@@ -20,9 +20,9 @@ package org.latestbit.picoos
 import org.latestbit.picoos._
 import org.latestbit.picoos.dsl._
 
-case class HttpResourceRequestAPIHandler(resource : HttpResource, path : String, apiHandler : Option[ApiMethodBodyHandler]) {
+case class HttpResourceExecutor(resource : HttpResource, path : String, apiHandler : Option[ApiMethodBodyHandler]) {
 	  
-	  def httpRequestHandler(req: HttpResourceRequest, resp: HttpResourceResponse) = {	    
+	  def execute(req: HttpResourceRequest, resp: HttpResourceResponse) = {	    
 		val accessGranted : Boolean = (
 		    apiHandler.isDefined && apiHandler.get.restricted &&
 			  (resource.httpAuthenticator match {
@@ -41,5 +41,5 @@ case class HttpResourceRequestAPIHandler(resource : HttpResource, path : String,
 		    
 		    result.proceedHttpResponse( resp )
 		}
-	  }	  
+	  }  
 }
