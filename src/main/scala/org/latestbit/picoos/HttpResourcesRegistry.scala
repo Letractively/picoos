@@ -31,7 +31,7 @@ trait HttpResourcesRegistry {
 		    httpMethod : HttpMethod = HttpMethod.ANY_METHOD)
 	
 	def findHandler (  httpMethod : HttpMethod, path : String ) : Option[(HttpResourceRequest, HttpResourceResponse) =>Unit]
-	def proceedRequest( req : HttpResourceRequest , resp : HttpResourceResponse )
+	def proceedRequest( req : HttpResourceRequest , resp : HttpResourceResponse, servicePath : String = null )
 	def clearAllHandlers()
 }
 
@@ -81,19 +81,39 @@ class StdHttpResourcesRegistry(val registryName : String) extends HttpResourcesR
 	  }
 	}
 	
-	def hasHandler(req : HttpResourceRequest) : Boolean = {
-	  findHandler( req.httpMethod, req.servicePath ).isDefined
+	def hasHandler ( httpMethod : HttpMethod, servicePath : String ) : Boolean = {
+	  findHandler( httpMethod, servicePath ).isDefined
 	}
 	
-	def proceedRequest(req : HttpResourceRequest , resp : HttpResourceResponse) = {
+	def hasHandler ( req : HttpResourceRequest ) : Boolean = {
+	  hasHandler( req.httpMethod, req.servicePath )
+	}
+	
+	def debugHandlerString : String = {
+	    handlersRegistry.keySet.foldRight("\n"+"Handlers: ")( (item, full) => full+"\n"+" "+item)
+	}
+	
+	def proceedRequest(req : HttpResourceRequest , resp : HttpResourceResponse, servicePathIn : String = null) = {
+		val servicePath = servicePathIn match {
+		  case s:String if s!=null => s
+		  case _ => req.servicePath
+		}
+		
 	    try {	      
-	      findHandler( req.httpMethod, req.servicePath ) match {
+	      findHandler( req.httpMethod, servicePath ) match {
 	        case Some(handler) => handler(req,resp )
-	        case _ => resp.http.sendError(
-	            HttpServletResponse.SC_NOT_FOUND, 
-	            "Not found any API handler at '"+req.servicePath
-	            +"'. Registry: "+registryName
-	            +". Size: "+handlersRegistry.size)
+	        case _ => {
+	        	val mainErrorString : String = 
+	        	  "Not found any API handler at '"+servicePath+
+	        	  "'. Registry: "+registryName+
+	        	  ". Size: "+handlersRegistry.size
+	        	  
+	        	resp.http.sendError(	        
+	        		HttpServletResponse.SC_NOT_FOUND,
+	        		mainErrorString
+	        	)
+	            log.warning(mainErrorString+debugHandlerString)
+	        }
 	      }
 	    }
 	    catch{
@@ -105,5 +125,3 @@ class StdHttpResourcesRegistry(val registryName : String) extends HttpResourcesR
 	  handlersRegistry.clear()
 	}
 }
-
-//object DefaultHttpResourcesRegistry extends StdHttpResourcesRegistry("Default Registry")

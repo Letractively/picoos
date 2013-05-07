@@ -66,7 +66,7 @@ class MainServlet extends HttpServlet {
     }
   }
   
-  var registry : HttpResourcesRegistry = null  
+  var registry : HttpResourcesRegistry = null
   
   override def init() = {
     super.init()

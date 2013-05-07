@@ -2,7 +2,7 @@ import sbt.Package.ManifestAttributes
 
 name := "picoos"
 
-version := "0.9"
+version := "0.10"
 
 organization := "www.latestbit.com"
 
