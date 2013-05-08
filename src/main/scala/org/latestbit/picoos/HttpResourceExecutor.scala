@@ -39,6 +39,13 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, apiHandl
 		      case _ => throw new Exception("Found empty or wrong request handler!")
 		    }
 		    
+		    if(resource.corsMode) {
+		    	if(resource.corsAllowOrigin.isDefined)
+		    		resp.http.setHeader("Access-Control-Allow-Origin", resource.corsAllowOrigin.get)
+		    	if(resource.corsAllowHeaders.isDefined)
+		    		resp.http.setHeader("Access-Control-Allow-Headers", resource.corsAllowHeaders.get)		      
+		    }
+		    
 		    result.proceedHttpResponse( resp )
 		}
 	  }  
