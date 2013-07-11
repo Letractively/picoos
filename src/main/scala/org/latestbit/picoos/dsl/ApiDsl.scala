@@ -19,8 +19,8 @@ package org.latestbit.picoos.dsl
 
 import org.latestbit.picoos._
 import org.latestbit.picoos.HttpMethod._
-import com.codahale.jerkson._
 import scala.xml.Node
+import org.latestbit.picoos.serializers._
 
 
 case class CachingStrategy(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
@@ -52,7 +52,8 @@ case class httpTextResult(textResult : String, override val cacheFlags : Caching
   }
 } 
 case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags) {
-  lazy val textResult = Json.generate(jsonObj)
+  //lazy val textResult = Json.generate(jsonObj)
+  lazy val textResult = JSonSerializer.serialize(jsonObj)
 
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
