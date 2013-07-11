@@ -13,3 +13,4 @@ licenses := Seq(("Apache License v2.0", url("http://www.apache.org/licenses/LICE
 scalaVersion := "2.10.2"
 
 exportJars := true
+
