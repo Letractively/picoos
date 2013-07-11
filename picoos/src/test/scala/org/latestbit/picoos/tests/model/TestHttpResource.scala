@@ -52,7 +52,7 @@ class TestHttpResource extends HttpResource("/resource1") {
     httpOkResult(CachingStrategy(false, false))
   }    
   
-  def getUsersSecure4 = restrictedApiMethod("/getUsersSecure4", HttpMethod.GET) as { req : HttpResourceRequest => 
+  def getUsersSecure4 = protectedApiMethod("/getUsersSecure4", HttpMethod.GET) as { req : HttpResourceRequest => 
     httpXmlResult(
         <test>xml result</test>
     )

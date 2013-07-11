@@ -21,6 +21,7 @@ import org.latestbit.picoos._
 import org.latestbit.picoos.HttpMethod._
 import scala.xml.Node
 import org.latestbit.picoos.serializers._
+import scala.collection.immutable.Map
 
 
 case class CachingStrategy(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
@@ -85,14 +86,17 @@ case class httpErrorResult(errorCode : Int, errorString : String, override val c
 	}
 }
 
-abstract class ApiMethodBodyHandler(val restricted : Boolean)
+abstract class ApiMethodBodyHandler(val properties : Map[String, AnyVal])
 
-class ApiMethodBodyHandlerNoParams(restricted : Boolean, apiMethodBody : => ApiMethodResult) extends ApiMethodBodyHandler(restricted) {
+class ApiMethodBodyHandlerNoParams(properties : Map[String, AnyVal], apiMethodBody : => ApiMethodResult) extends ApiMethodBodyHandler(properties) {
   lazy val handler = apiMethodBody
 }	
-case class ApiMethodBodyHandlerHttpRequest(override val restricted : Boolean, val handler : (HttpResourceRequest)=> ApiMethodResult) extends ApiMethodBodyHandler(restricted)
-case class ApiMethodBodyHandlerHttpRequestAndResponse(override val restricted : Boolean, val handler : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) extends ApiMethodBodyHandler(restricted)
+class ApiMethodBodyHandlerHttpRequest(properties : Map[String, AnyVal], val handler : (HttpResourceRequest)=> ApiMethodResult) extends ApiMethodBodyHandler(properties)
+class ApiMethodBodyHandlerHttpRequestAndResponse(properties : Map[String, AnyVal], val handler : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) extends ApiMethodBodyHandler(properties)
 
+object ApiMethodBodyProperties {
+  val PROTECTED = "protected"
+}
 
 trait ApiDsl {
 
@@ -103,19 +107,19 @@ trait ApiDsl {
 	}
 	
 	case class ApiMethodDef  (
-	    restricted : Boolean = false,
+	    properties : Map[String, AnyVal] = Map(), 
 	    path : Option[String] = None, 
 	    httpMethod : HttpMethod = HttpMethod.ANY_METHOD, 
 	    handler : Option[ApiMethodBodyHandler] = None) extends ApiMethod  {
 
 		def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(restricted, path, httpMethod, Option(new ApiMethodBodyHandlerNoParams(restricted,apiMethodBody)))
+		  ApiMethodDef( properties, path, httpMethod, Option(new ApiMethodBodyHandlerNoParams(properties, apiMethodBody)))
 		}
 		def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(restricted, path, httpMethod, Option(ApiMethodBodyHandlerHttpRequest(restricted, apiMethodBody)))
+		  ApiMethodDef(properties, path, httpMethod, Option(new ApiMethodBodyHandlerHttpRequest(properties, apiMethodBody)))
 		}
 		def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(restricted, path, httpMethod, Option(ApiMethodBodyHandlerHttpRequestAndResponse(restricted, apiMethodBody)))
+		  ApiMethodDef(properties, path, httpMethod, Option(new ApiMethodBodyHandlerHttpRequestAndResponse(properties, apiMethodBody)))
 		}
 		
 		def execute() = {
@@ -144,35 +148,42 @@ trait ApiDsl {
 		
 	} 
 	
-	class ApiMethodImpl(val restricted : Boolean =false) extends ApiMethod {
+	class ApiMethodImpl(val properties : Map[String, AnyVal] = Map()) extends ApiMethod {
 		def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(restricted, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerNoParams(restricted,apiMethodBody)))
+		  ApiMethodDef(properties, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerNoParams(properties,apiMethodBody)))
 		} 
 		def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(restricted, None, HttpMethod.ANY_METHOD, Option(ApiMethodBodyHandlerHttpRequest(restricted,apiMethodBody)))
+		  ApiMethodDef(properties, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerHttpRequest(properties,apiMethodBody)))
 		}
 		def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(restricted, None, HttpMethod.ANY_METHOD, Option(ApiMethodBodyHandlerHttpRequestAndResponse(restricted,apiMethodBody)))
+		  ApiMethodDef(properties, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerHttpRequestAndResponse(properties,apiMethodBody)))
 		}
 		
 		def apply : ApiMethodDef = {
-		  ApiMethodDef(restricted)
+		  ApiMethodDef(properties)
 		}
-	  
-		def apply(path : String, httpMethod : HttpMethod = HttpMethod.ANY_METHOD) : ApiMethodDef = {
-		  ApiMethodDef(restricted, Option(path), httpMethod)
+
+		def apply(path : String) : ApiMethodDef = {
+		  ApiMethodDef(properties, Option(path))
+		}
+		
+		def apply(path : String, httpMethod : HttpMethod) : ApiMethodDef = {
+		  ApiMethodDef(properties, Option(path), httpMethod)
 		}
 		
 		def apply(httpMethod : HttpMethod) : ApiMethodDef = {
-		  ApiMethodDef(restricted, None, httpMethod)
-		}			
+		  ApiMethodDef(properties, None, httpMethod)
+		}	
+		
 	}
 	
 	object apiMethod extends ApiMethodImpl {	  
 	}
 	
-	object restrictedApiMethod extends ApiMethodImpl(true) {	  
+	class ProtectedApiMethod extends ApiMethodImpl(Map( ApiMethodBodyProperties.PROTECTED -> true )) {	  
 	}
 	
+	object protectedApiMethod extends ProtectedApiMethod {
+	}
 
 }

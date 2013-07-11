@@ -24,12 +24,12 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, apiHandl
 	  
 	  def execute(req: HttpResourceRequest, resp: HttpResourceResponse) = {	    
 		val accessGranted : Boolean = (
-		    apiHandler.isDefined && apiHandler.get.restricted &&
+		    apiHandler.isDefined && apiHandler.get.properties.getOrElse(ApiMethodBodyProperties.PROTECTED, false).asInstanceOf[Boolean] &&
 			  (resource.httpAuthenticator match {
 			    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path);
 			    case _ => throw new Exception("Restricted method at "+resource.resourcePath+" required authenticator");
 			  })
-		   ) || (apiHandler.isDefined && !apiHandler.get.restricted)
+		   ) || (apiHandler.isDefined && !apiHandler.get.properties.getOrElse(ApiMethodBodyProperties.PROTECTED, false).asInstanceOf[Boolean])
 		
 		if(accessGranted) {
 		    val result : ApiMethodResult = apiHandler match {
