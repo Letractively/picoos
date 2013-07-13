@@ -20,33 +20,32 @@ package org.latestbit.picoos
 import org.latestbit.picoos._
 import org.latestbit.picoos.dsl._
 
-case class HttpResourceExecutor(resource : HttpResource, path : String, apiHandler : Option[ApiMethodBodyHandler]) {
+case class HttpResourceExecutor(resource : HttpResource, path : String, restMethod : Option[RestMethodBodyDef]) {
 	  
-	  def execute(req: HttpResourceRequest, resp: HttpResourceResponse) = {	    
-		val accessGranted : Boolean = (
-		    apiHandler.isDefined && apiHandler.get.properties.getOrElse(ApiMethodBodyProperties.PROTECTED, false).asInstanceOf[Boolean] &&
-			  (resource.httpAuthenticator match {
-			    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path);
-			    case _ => throw new Exception("Restricted method at "+resource.resourcePath+" required authenticator");
-			  })
-		   ) || (apiHandler.isDefined && !apiHandler.get.properties.getOrElse(ApiMethodBodyProperties.PROTECTED, false).asInstanceOf[Boolean])
-		
-		if(accessGranted) {
-		    val result : ApiMethodResult = apiHandler match {
-		      case Some(body : ApiMethodBodyHandlerNoParams) => body.handler
-		      case Some(body : ApiMethodBodyHandlerHttpRequest) => body.handler(req)
-		      case Some(body : ApiMethodBodyHandlerHttpRequestAndResponse) => body.handler(req, resp)
-		      case _ => throw new Exception("Found empty or wrong request handler!")
-		    }
-		    
-		    if(resource.corsMode) {
-		    	if(resource.corsAllowOrigin.isDefined)
-		    		resp.http.setHeader("Access-Control-Allow-Origin", resource.corsAllowOrigin.get)
-		    	if(resource.corsAllowHeaders.isDefined)
-		    		resp.http.setHeader("Access-Control-Allow-Headers", resource.corsAllowHeaders.get)		      
-		    }
-		    
-		    result.proceedHttpResponse( resp )
-		}
+	  def execute(req: HttpResourceRequest, resp: HttpResourceResponse) = {
+	    if(restMethod.isDefined) {
+			val accessGranted : Boolean = (
+			    restMethod.get.authParams.isDefined &&
+				  (resource.httpAuthenticator match {
+				    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path);
+				    case _ => throw new Exception("Restricted method at "+resource.resourcePath+" required authenticator");
+				  })
+			   ) || (restMethod.get.authParams.isEmpty)
+			
+			if(accessGranted) {
+			    val result : RestMethodResult = restMethod.get.execute(req, resp)
+			    
+			    if(resource.corsMode) {
+			    	if(resource.corsAllowOrigin.isDefined)
+			    		resp.http.setHeader("Access-Control-Allow-Origin", resource.corsAllowOrigin.get)
+			    	if(resource.corsAllowHeaders.isDefined)
+			    		resp.http.setHeader("Access-Control-Allow-Headers", resource.corsAllowHeaders.get)		      
+			    }
+			    
+			    result.proceedHttpResponse( resp )
+			}
+	    }
+	    else
+	      throw new Exception("Unable to execute undefined method at "+path)
 	  }  
 }
