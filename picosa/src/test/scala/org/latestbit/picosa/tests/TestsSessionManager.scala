@@ -27,15 +27,16 @@ class TestsSessionManager extends FeatureSpec {
 	  scenario("Generate key & session") {
 	    val key = sessionManager.generateKey()
 	    val userId = "TestUser"
+	    val authType = "OAuth2"
 	    val time = System.currentTimeMillis()
-	    val sessionKey1 = sessionManager.createSessionKey( key, userId, time )
-	    val sessionKey2 = sessionManager.createSessionKey( key, userId, time )
-	    val sessionKey3 = sessionManager.createSessionKey( key, "AnotherUser", time )
+	    val sessionKey1 = sessionManager.createSessionKey( key, userId, authType, time )
+	    val sessionKey2 = sessionManager.createSessionKey( key, userId, authType, time )
+	    val sessionKey3 = sessionManager.createSessionKey( key, "AnotherUser", authType, time )
 	    assert (sessionKey1.equals(sessionKey2))
 	    assert (!sessionKey2.equals(sessionKey3))
 	    
 	    val anotherKey = sessionManager.generateKey()
-	    val sessionKey4 = sessionManager.createSessionKey( anotherKey, userId, time )
+	    val sessionKey4 = sessionManager.createSessionKey( anotherKey, userId, authType, time )
 	    assert (!sessionKey1.equals(sessionKey4))
 	  }
 	}
