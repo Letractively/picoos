@@ -17,6 +17,48 @@
 
 package org.latestbit.picosa.tests
 
-class TestsRolesManager {
+import org.scalatest.FeatureSpec
+import org.latestbit.picosa._
 
+
+class TestsRolesManager extends FeatureSpec {
+	feature("Test basic roles manager" ) {
+	  val rolesMgr : RolesManager = new BasicRolesManager(classOf[TestsRolesManager].getResourceAsStream("test-roles.xml"))
+	  
+	  scenario("Checking roles") {
+		assert ( rolesMgr.getRoles().size > 0)
+		assert ( rolesMgr.getRoles().find( _.name.equalsIgnoreCase("Administrator")).isDefined )
+	  }
+	  
+	  scenario("Checking permissions") {
+	    val testRolePerms = rolesMgr.getPermissions("TestRole")
+	  	assert ( testRolePerms.hasPermission(Permission("Order", "Report")) )
+	  	assert ( testRolePerms.hasPermission("Order", "Report") )
+	  	assert ( testRolePerms.hasPermission("Order.Report") )	  	
+	  	assert ( testRolePerms.hasPermission("Read.User") )
+	  	
+	  	val adminRolePerms = rolesMgr.getPermissions("Administrator")
+	  	assert ( adminRolePerms.hasPermission("Anything.Anything") )
+	  	assert ( adminRolePerms.hasPermission("Test.Test") )
+	  	
+	  	val viewerRolePerms = rolesMgr.getPermissions("Viewer")
+	  	assert ( !viewerRolePerms.hasPermission("Anything.Anything") )
+	  	assert ( viewerRolePerms.hasPermission("Read.Anything") )
+	  	
+	  	val reportViewerRolePerms = rolesMgr.getPermissions("ReportViewer")
+	  	assert ( !reportViewerRolePerms.hasPermission("Anything.Anything") )
+	  	assert ( reportViewerRolePerms.hasPermission("Read.Report") )
+	  	assert ( reportViewerRolePerms.hasPermission("Order.Report") )
+	  	assert ( reportViewerRolePerms.hasPermission("Anything.Report") )
+	  }
+	  
+	  scenario("Checking permissions for mixed roles") {
+   	    val testPerms = rolesMgr.getPermissions(Seq("TestRole", "ReportViewer"))
+	  	assert ( testPerms.hasPermission("Order.Report") )	  	
+	  	assert ( testPerms.hasPermission("Read.User") )
+	  	assert ( testPerms.hasPermission("Anything.Report") )
+	  	assert ( !testPerms.hasPermission("Anything.Anything") )
+
+	  }
+	}
 }

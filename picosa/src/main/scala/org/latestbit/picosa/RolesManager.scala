@@ -20,32 +20,37 @@ package org.latestbit.picosa
 import java.io.InputStream
 import scala.xml._
 
+case class Role(name : String)(description : Option[String])
+
 trait RolesManager {
-	def getRoles() : Seq[String] 
-	def getPermissions(roles : Seq[String]) : PicosaPermissions	
+	def getRoles() : Seq[Role]
+	def getPermissionsByRoles(roles : Seq[Role]) : PicosaPermissions
+	def getPermissions(role : String) : PicosaPermissions = getPermissions(Seq(role))
+	def getPermissions(roles : Seq[String]) : PicosaPermissions = getPermissionsByRoles(roles.map(Role(_)(None)))
 }
 
 class BasicRolesManager(val rolesDescXML : InputStream) extends RolesManager {
   
-  val permissions : Map[String, PicosaPermissions] = loadRolesConfig()
+  val permissions : Map[Role, PicosaPermissions] = loadRolesConfig()
   
-  def loadRolesConfig() : Map[String, PicosaPermissions] = {
+  def loadRolesConfig() : Map[Role, PicosaPermissions] = {
     val data = XML.load(rolesDescXML)
+    
     (data \\ "roles" \\ "role").map( role => {
-      (role.text, new PicosaPermissions(
+      ( (Role( (role \ "@name").text)(Some((role \ "@desc").text)) ), new PicosaPermissions(
           (role \\ "permissions" \\ "permission").map(
               permNode => Permission( 
-                  (permNode \ "@object").text,
-                  (permNode \ "@action").text
+                  (permNode \ "@action").text,
+                  (permNode \ "@object").text
               )
           ))
       )
     }).toMap 
   }
   
-  override def getRoles() : Seq[String] = permissions.keys.toSeq
+  override def getRoles() : Seq[Role] = permissions.keys.toSeq
   
-  override def getPermissions(roles : Seq[String]) : PicosaPermissions = {
+  override def getPermissionsByRoles(roles : Seq[Role]) : PicosaPermissions = {
     roles.foldLeft(new PicosaPermissions())( (all, item) => all ++ permissions(item))
   }
   

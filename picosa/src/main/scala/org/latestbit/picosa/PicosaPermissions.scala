@@ -17,13 +17,17 @@
 
 package org.latestbit.picosa
 
-case class Permission(permObject : String, permAction : String)
+case class Permission(permAction : String, permObject : String)
 
 class PicosaPermissions(val permissions : Seq[Permission] = Seq()) {				 
   
 	def ++ (that : PicosaPermissions) : PicosaPermissions = {
 			new PicosaPermissions( permissions ++ that.permissions.filter( item => !this.hasPermission(item)) )
 	}
+	
+	def hasPermission ( perm: String ) : Boolean = hasPermission(perm.split("\\.")(0), perm.split("\\.")(1))
+	
+	def hasPermission ( permAction: String, permObject : String) : Boolean = hasPermission(Permission(permAction, permObject))
 	
 	def hasPermission(perm : Permission) : Boolean = {
 	  permissions.find( 
