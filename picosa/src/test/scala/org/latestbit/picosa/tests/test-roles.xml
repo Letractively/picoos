@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roles>
+	<role name="Administrator" desc="Access to all functionality">
+		<permissions>
+			<permission action="*" object="*"/>
+		</permissions>
+	</role>
+	<role name="Viewer" desc="Access to all functionality read only">
+		<permissions>
+			<permission action="Read" object="*"/>
+		</permissions>
+	</role>
+	<role name="ReportViewer" desc="Access to all report functionality">
+		<permissions>
+			<permission action="*" object="Report"/>
+		</permissions>
+	</role>
+	<role name="TestRole" desc="Access to all report functionality">
+		<permissions>
+			<permission action="Order" object="Report"/>
+			<permission action="Read" object="User"/>
+		</permissions>
+	</role>
+	
+</roles>

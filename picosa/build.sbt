@@ -19,8 +19,7 @@ resolvers ++= Seq(
 ) 
 
 libraryDependencies ++= Seq(
-	"org.scalatest" %% "scalatest" % "1.+" % "test",
-	"org.yaml" % "snakeyaml" % "1.+"
+	"org.scalatest" %% "scalatest" % "1.+" % "test"
 )
 
 scalacOptions ++= Seq(
