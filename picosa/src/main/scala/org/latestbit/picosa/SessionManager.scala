@@ -27,14 +27,14 @@ class SessionManager {
   
 	val algorithm = "HmacSHA1"
 	  
-	def createSessionKey( key : Array[Byte], userId : String, expiration : Long ) : String = {
+	def createSessionKey( key : Array[Byte], userId : String, authType : String, expiration : Long ) : String = {
 	   
 	  val keySpec = new SecretKeySpec(
         key, algorithm 
       )
 	  val encrypt = Mac.getInstance(algorithm)
 	  encrypt.init(keySpec)
-	  Hex.encodeHexString(encrypt.doFinal( (userId+":"+expiration.toString).getBytes() ))	  
+	  Hex.encodeHexString(encrypt.doFinal( (userId+":"+authType+":"+expiration.toString).getBytes() ))	  
 	}
 	
 	def generateKey() : Array[Byte] = {
