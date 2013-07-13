@@ -49,7 +49,7 @@ class TestHttpResource extends HttpResource("/resource1") {
   }    
 
   def getUsers7= apiMethod(HttpMethod.GET) as { (req : HttpResourceRequest, resp : HttpResourceResponse) => 
-    httpOkResult(CachingStrategy(false, false))
+    httpOkResult(CachingOptions(false, false))
   }    
   
   def getUsersSecure4 = protectedApiMethod("/getUsersSecure4", HttpMethod.GET) as { req : HttpResourceRequest => 

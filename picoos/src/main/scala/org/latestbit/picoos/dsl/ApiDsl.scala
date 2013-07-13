@@ -24,9 +24,9 @@ import org.latestbit.picoos.serializers._
 import scala.collection.immutable.Map
 
 
-case class CachingStrategy(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
+case class CachingOptions(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
 
-abstract class ApiMethodResult(val cacheFlags : CachingStrategy) {
+abstract class ApiMethodResult(val cacheFlags : CachingOptions) {
   def proceedHttpResponse(resp : HttpResourceResponse) = {
     if(cacheFlags.noCacheMode) {
       resp.http.setHeader("Cache-Control",  "no-cache, no-store, must-revalidate")
@@ -39,12 +39,12 @@ abstract class ApiMethodResult(val cacheFlags : CachingStrategy) {
   }
 }
 
-case class httpOkResult(override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags)
-object httpOkResult extends httpOkResult(CachingStrategy())
-case class httpNoResult(override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags)
-object httpNoResult extends httpNoResult(CachingStrategy())
+case class httpOkResult(override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags)
+object httpOkResult extends httpOkResult(CachingOptions())
+case class httpNoResult(override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags)
+object httpNoResult extends httpNoResult(CachingOptions())
 
-case class httpTextResult(textResult : String, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags) {
+case class httpTextResult(textResult : String, override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags) {
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	   super.proceedHttpResponse(resp)
 	   resp.http.setContentType("text/plain")
@@ -52,7 +52,7 @@ case class httpTextResult(textResult : String, override val cacheFlags : Caching
 	   resp.http.getWriter().flush()	   
   }
 } 
-case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags) {
+case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags) {
   //lazy val textResult = Json.generate(jsonObj)
   lazy val textResult = JSonSerializer.serialize(jsonObj)
 
@@ -64,7 +64,7 @@ case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : Cach
   }  
 }
 
-case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingStrategy= CachingStrategy()) extends ApiMethodResult(cacheFlags)  {
+case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags)  {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
       resp.http.setContentType("text/xml")
@@ -72,14 +72,14 @@ case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingStrateg
       resp.http.getWriter().flush()
 	}  
 }
-case class httpRedirectResult(url : String, override val cacheFlags : CachingStrategy= CachingStrategy())  extends ApiMethodResult(cacheFlags) {
+case class httpRedirectResult(url : String, override val cacheFlags : CachingOptions= CachingOptions())  extends ApiMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)	  
 		resp.http.sendRedirect( url )	  
 	}
 }
 
-case class httpErrorResult(errorCode : Int, errorString : String, override val cacheFlags : CachingStrategy= CachingStrategy())  extends ApiMethodResult(cacheFlags) {
+case class httpErrorResult(errorCode : Int, errorString : String, override val cacheFlags : CachingOptions= CachingOptions())  extends ApiMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)
 		resp.http.sendError(errorCode, errorString)	  
