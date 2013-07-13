@@ -19,11 +19,13 @@ package org.latestbit.picosa.tests
 
 import org.scalatest.FeatureSpec
 import org.latestbit.picosa._
-
+import scala.io.Source
 
 class TestsRolesManager extends FeatureSpec {
-	feature("Test basic roles manager" ) {
-	  val rolesMgr : RolesManager = new BasicRolesManager(classOf[TestsRolesManager].getResourceAsStream("test-roles.xml"))
+	feature("Test basic roles manager" ) {	  
+	  val rolesMgr : RolesManager = new BasicRolesManager(
+	      getClass.getResource("/test-roles.xml").openStream()  /*classOf[TestsRolesManager].getResourceAsStream("test-roles.xml")*/
+	  )
 	  
 	  scenario("Checking roles") {
 		assert ( rolesMgr.getRoles().size > 0)
