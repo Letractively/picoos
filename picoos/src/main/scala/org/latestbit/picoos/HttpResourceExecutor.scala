@@ -27,7 +27,7 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, restMeth
 			val accessGranted : Boolean = (
 			    restMethod.get.authParams.isDefined &&
 				  (resource.httpAuthenticator match {
-				    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path);
+				    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path, restMethod.get);
 				    case _ => throw new Exception("Restricted method at "+resource.resourcePath+" required authenticator");
 				  })
 			   ) || (restMethod.get.authParams.isEmpty)
