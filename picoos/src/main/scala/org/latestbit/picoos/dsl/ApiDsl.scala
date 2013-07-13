@@ -26,7 +26,7 @@ import scala.collection.immutable.Map
 
 case class CachingOptions(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
 
-abstract class ApiMethodResult(val cacheFlags : CachingOptions) {
+abstract class RestMethodResult(val cacheFlags : CachingOptions) {
   def proceedHttpResponse(resp : HttpResourceResponse) = {
     if(cacheFlags.noCacheMode) {
       resp.http.setHeader("Cache-Control",  "no-cache, no-store, must-revalidate")
@@ -39,12 +39,12 @@ abstract class ApiMethodResult(val cacheFlags : CachingOptions) {
   }
 }
 
-case class httpOkResult(override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags)
+case class httpOkResult(override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags)
 object httpOkResult extends httpOkResult(CachingOptions())
-case class httpNoResult(override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags)
+case class httpNoResult(override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags)
 object httpNoResult extends httpNoResult(CachingOptions())
 
-case class httpTextResult(textResult : String, override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags) {
+case class httpTextResult(textResult : String, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	   super.proceedHttpResponse(resp)
 	   resp.http.setContentType("text/plain")
@@ -52,7 +52,7 @@ case class httpTextResult(textResult : String, override val cacheFlags : Caching
 	   resp.http.getWriter().flush()	   
   }
 } 
-case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags) {
+case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
   //lazy val textResult = Json.generate(jsonObj)
   lazy val textResult = JSonSerializer.serialize(jsonObj)
 
@@ -64,7 +64,7 @@ case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : Cach
   }  
 }
 
-case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingOptions= CachingOptions()) extends ApiMethodResult(cacheFlags)  {
+case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags)  {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
       resp.http.setContentType("text/xml")
@@ -72,118 +72,134 @@ case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingOptions
       resp.http.getWriter().flush()
 	}  
 }
-case class httpRedirectResult(url : String, override val cacheFlags : CachingOptions= CachingOptions())  extends ApiMethodResult(cacheFlags) {
+case class httpRedirectResult(url : String, override val cacheFlags : CachingOptions= CachingOptions())  extends RestMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)	  
 		resp.http.sendRedirect( url )	  
 	}
 }
 
-case class httpErrorResult(errorCode : Int, errorString : String, override val cacheFlags : CachingOptions= CachingOptions())  extends ApiMethodResult(cacheFlags) {
+case class httpErrorResult(errorCode : Int, errorString : String, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)
 		resp.http.sendError(errorCode, errorString)	  
 	}
 }
 
-abstract class ApiMethodBodyHandler(val properties : Map[String, AnyVal])
+class AuthParams(val permissions : Seq[String])
+class RestParams(val path : String = null, val httpMethod : HttpMethod = HttpMethod.ANY_METHOD)
 
-class ApiMethodBodyHandlerNoParams(properties : Map[String, AnyVal], apiMethodBody : => ApiMethodResult) extends ApiMethodBodyHandler(properties) {
-  lazy val handler = apiMethodBody
-}	
-class ApiMethodBodyHandlerHttpRequest(properties : Map[String, AnyVal], val handler : (HttpResourceRequest)=> ApiMethodResult) extends ApiMethodBodyHandler(properties)
-class ApiMethodBodyHandlerHttpRequestAndResponse(properties : Map[String, AnyVal], val handler : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) extends ApiMethodBodyHandler(properties)
+class RestMethodBodyDef {
+  
+  abstract class RestMethodBodyHandler
+  class RestMethodBodyHandlerNoParams(inBody : => RestMethodResult) extends RestMethodBodyHandler {
+	  lazy val handler = inBody
+  }	
+  class RestMethodBodyHandlerHttpRequest(val handler : (HttpResourceRequest)=> RestMethodResult) extends RestMethodBodyHandler
+  class RestMethodBodyHandlerHttpRequestAndResponse(val handler : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) extends RestMethodBodyHandler
+	  
+  var bodyHandler : Option[ RestMethodBodyHandler ] = None	  
+  var authParams : Option[AuthParams] = None	  
+  var restParams : RestParams = new RestParams()  
+  
+  def withAuthParams(params : AuthParams) = {
+    this.authParams = Some(params)
+    this
+  }
+  
+  def withRestParams(params : RestParams) = {
+    this.restParams = params
+    this
+  }
+  
+  def withBody(body : => RestMethodResult) = {
+    bodyHandler = Some(new RestMethodBodyHandlerNoParams(body))
+    this
+  }
+  
+  def withBody(body : (HttpResourceRequest)=> RestMethodResult) = {
+    bodyHandler = Some(new RestMethodBodyHandlerHttpRequest(body))
+    this
+  }
+  
+  def withBody(body : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) = {
+    bodyHandler = Some(new RestMethodBodyHandlerHttpRequestAndResponse(body))
+    this
+  }
+  
+  def execute() = {
+	  bodyHandler match {
+	      case Some(body : RestMethodBodyHandlerNoParams) => body.handler
+	      case _ => throw new Exception("Unable to execute empty or wrong request handler!")
+	  }
+  }
+	
+  def execute(req : HttpResourceRequest) = {
+	  bodyHandler match {
+      	case Some(body : RestMethodBodyHandlerNoParams) => body.handler
+      	case Some(body : RestMethodBodyHandlerHttpRequest) => body.handler(req)
+      	case _ => throw new Exception("Unable to execute empty or wrong request handler!")
+  	  }
+  }
 
-object ApiMethodBodyProperties {
-  val PROTECTED = "protected"
+  def execute(req : HttpResourceRequest, resp : HttpResourceResponse) = {
+	  bodyHandler match {
+	      case Some(body : RestMethodBodyHandlerNoParams) => body.handler
+	      case Some(body : RestMethodBodyHandlerHttpRequest) => body.handler(req)
+	      case Some(body : RestMethodBodyHandlerHttpRequestAndResponse) => body.handler(req, resp)
+	      case _ => throw new Exception("Unable to execute empty or wrong request handler!")
+	  }  
+  }  
 }
 
 trait ApiDsl {
+	
+	object as {
+	  def apply (body : => RestMethodResult) : RestMethodBodyDef = { new RestMethodBodyDef().withBody(body) }
+	  def apply( body : (HttpResourceRequest)=> RestMethodResult) : RestMethodBodyDef = { new RestMethodBodyDef().withBody(body) }
+	  def apply( body : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) : RestMethodBodyDef = { new RestMethodBodyDef().withBody(body) }	  
+	}
+	
+	trait RestMethodTrait {
+	  def as( body : => RestMethodResult) : RestMethodBodyDef = { new RestMethodBodyDef().withBody(body) }
+	  def as( body : (HttpResourceRequest)=> RestMethodResult) : RestMethodBodyDef = { new RestMethodBodyDef().withBody(body) }
+	  def as( body : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) : RestMethodBodyDef = { new RestMethodBodyDef().withBody(body) }  
+	}
+	
+	case class restMethod(override val path : String = null, override val httpMethod : HttpMethod = HttpMethod.ANY_METHOD) extends RestParams(path, httpMethod) with RestMethodTrait {	  
+	  override def as(body : => RestMethodResult) : RestMethodBodyDef = { super.as(body).withRestParams(this) }
+	  override def as(body : (HttpResourceRequest) => RestMethodResult) : RestMethodBodyDef = { super.as(body).withRestParams(this) }
+	  override def as(body : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) : RestMethodBodyDef = { super.as(body).withRestParams(this) }
+	}
+	
+	case class InternalRestMethodWithAuth (path : String = null, httpMethod : HttpMethod = HttpMethod.ANY_METHOD, authParams : requireAuth) extends RestMethodTrait {
+	  val restParams = restMethod(path, httpMethod)
+	  override def as(body : => RestMethodResult) : RestMethodBodyDef = { super.as(body).withRestParams(restParams).withAuthParams(authParams) }
+	  override def as(body : (HttpResourceRequest) => RestMethodResult) : RestMethodBodyDef = { super.as(body).withRestParams(restParams).withAuthParams(authParams) }
+	  override def as(body : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) : RestMethodBodyDef = { super.as(body).withRestParams(restParams).withAuthParams(authParams) }	  
+	}
+	
+	object restMethod extends RestMethodTrait 
+	
+	trait RequireAuthTrait {
+	  def restMethod(in : RestMethodBodyDef) : RestMethodBodyDef = { in.withAuthParams(requireAuth()) }
+	  def restMethod(path : String = null, httpMethod : HttpMethod = HttpMethod.ANY_METHOD) : RestMethodTrait = { 
+	    InternalRestMethodWithAuth(path, httpMethod, requireAuth())
+	  }
+	}
+	
+	case class requireAuth( override val permissions : Seq[String] = Seq() ) extends AuthParams(permissions) with RequireAuthTrait {
+	  override def restMethod(in : RestMethodBodyDef) : RestMethodBodyDef = { 
+			  in.withAuthParams(this) 
+	  }
+	  
+	  override def restMethod(path : String = null, httpMethod : HttpMethod = HttpMethod.ANY_METHOD) : RestMethodTrait = { 
+	    InternalRestMethodWithAuth(path, httpMethod, this)
+	  }
 
-	trait ApiMethod {
-	  def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef
-	  def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef
-	  def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef
 	}
 	
-	case class ApiMethodDef  (
-	    properties : Map[String, AnyVal] = Map(), 
-	    path : Option[String] = None, 
-	    httpMethod : HttpMethod = HttpMethod.ANY_METHOD, 
-	    handler : Option[ApiMethodBodyHandler] = None) extends ApiMethod  {
-
-		def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef( properties, path, httpMethod, Option(new ApiMethodBodyHandlerNoParams(properties, apiMethodBody)))
-		}
-		def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(properties, path, httpMethod, Option(new ApiMethodBodyHandlerHttpRequest(properties, apiMethodBody)))
-		}
-		def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(properties, path, httpMethod, Option(new ApiMethodBodyHandlerHttpRequestAndResponse(properties, apiMethodBody)))
-		}
-		
-		def execute() = {
-		  handler match {
-		      case Some(body : ApiMethodBodyHandlerNoParams) => body.handler
-		      case _ => throw new Exception("Unable to execute empty or wrong request handler!")
-		  }
-		}
-		
-		def execute(req : HttpResourceRequest) = {
-		  handler match {
-		      case Some(body : ApiMethodBodyHandlerNoParams) => body.handler
-		      case Some(body : ApiMethodBodyHandlerHttpRequest) => body.handler(req)
-		      case _ => throw new Exception("Unable to execute empty or wrong request handler!")
-		  }
-		}
-
-		def execute(req : HttpResourceRequest, resp : HttpResourceResponse) = {
-		  handler match {
-		      case Some(body : ApiMethodBodyHandlerNoParams) => body.handler
-		      case Some(body : ApiMethodBodyHandlerHttpRequest) => body.handler(req)
-		      case Some(body : ApiMethodBodyHandlerHttpRequestAndResponse) => body.handler(req, resp)
-		      case _ => throw new Exception("Unable to execute empty or wrong request handler!")
-		  }
-		}
-		
-	} 
-	
-	class ApiMethodImpl(val properties : Map[String, AnyVal] = Map()) extends ApiMethod {
-		def as( apiMethodBody : => ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(properties, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerNoParams(properties,apiMethodBody)))
-		} 
-		def as( apiMethodBody : (HttpResourceRequest)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(properties, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerHttpRequest(properties,apiMethodBody)))
-		}
-		def as( apiMethodBody : (HttpResourceRequest, HttpResourceResponse)=> ApiMethodResult) : ApiMethodDef = {
-		  ApiMethodDef(properties, None, HttpMethod.ANY_METHOD, Option(new ApiMethodBodyHandlerHttpRequestAndResponse(properties,apiMethodBody)))
-		}
-		
-		def apply : ApiMethodDef = {
-		  ApiMethodDef(properties)
-		}
-
-		def apply(path : String) : ApiMethodDef = {
-		  ApiMethodDef(properties, Option(path))
-		}
-		
-		def apply(path : String, httpMethod : HttpMethod) : ApiMethodDef = {
-		  ApiMethodDef(properties, Option(path), httpMethod)
-		}
-		
-		def apply(httpMethod : HttpMethod) : ApiMethodDef = {
-		  ApiMethodDef(properties, None, httpMethod)
-		}	
-		
-	}
-	
-	object apiMethod extends ApiMethodImpl {	  
-	}
-	
-	class ProtectedApiMethod extends ApiMethodImpl(Map( ApiMethodBodyProperties.PROTECTED -> true )) {	  
-	}
-	
-	object protectedApiMethod extends ProtectedApiMethod {
-	}
+	object requireAuth extends RequireAuthTrait	
 
 }
+

@@ -25,7 +25,11 @@ trait HttpResourceCustomHandler {
 
 class HttpResource(val resourcePath : String) extends ApiDsl {
 	
-	protected val allApiMethods = getClass.getMethods.filter( method => method.getReturnType().eq(classOf[ApiMethodDef]) && !method.getName().startsWith("$") )
+	protected val allApiMethods = 
+	  getClass.getMethods.filter( 
+	      method => method.getReturnType().eq(classOf[RestMethodBodyDef]) 
+	      && !method.getName().startsWith("$") 
+	  )
 	var customHandlers : List[HttpResourceCustomHandler] = List()  
 	var httpAuthenticator : Option[HttpAuthenticator] = None
 	val localResourceRegistry = new StdHttpResourcesRegistry("{"+resourcePath+"} Registry")
@@ -48,17 +52,17 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 		
 		allApiMethods.foreach(item => {
 		  
-		  val methodDef : ApiMethodDef = item.invoke(this).asInstanceOf[ApiMethodDef]
+		  val methodDef : RestMethodBodyDef = item.invoke(this).asInstanceOf[RestMethodBodyDef]
 		  
-		  val handlerPath = methodDef.path match {
+		  val handlerPath = Option(methodDef.restParams.path) match {
 		    case Some(pathStr) => pathStr
 		    case _ => "/" + item.getName()
 		  }
 		  
 		  localResourceRegistry.registerHandler(
 		      resourcePath+handlerPath, 
-		      HttpResourceExecutor( this, handlerPath, methodDef.handler ).execute, 
-		      methodDef.httpMethod)		  
+		      HttpResourceExecutor( this, handlerPath, Some(methodDef) ).execute, 
+		      methodDef.restParams.httpMethod)		  
 		})
 		
 		registry.registerHandler(resourcePath, proceedResourceRequest)
@@ -123,58 +127,58 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 		      case str : String => str
 		    }
 		    
-		    val canonicalMethodBody : Option[ApiMethodBodyHandler] = req.httpMethod match {		      
+		    val canonicalMethodBody : Option[RestMethodBodyDef] = req.httpMethod match {		      
 		      case HttpMethod.GET =>
 		        resourceId match {
-		          case "/" => $list.handler
-		          case str : String => $getResource(resourceId).handler
+		          case "/" => Some($list)
+		          case str : String => Some($getResource(resourceId))
 		        }
 		      case HttpMethod.PUT =>
 		        resourceId match {
-		          case "/" => $replaceAll.handler
-		          case str : String => $replaceResource(resourceId).handler
+		          case "/" => Some($replaceAll)
+		          case str : String => Some($replaceResource(resourceId))
 		        }
 		      case HttpMethod.POST =>
 		        resourceId match {
-		          case "/" => $newResource.handler
-		          case str : String => $replaceResource(resourceId).handler
+		          case "/" => Some($newResource)
+		          case str : String => Some($replaceResource(resourceId))
 		        }
 		      case HttpMethod.DELETE =>
 		        resourceId match {
-		          case "/" => $deleteAll.handler
-		          case str : String => $deleteResource(resourceId).handler
+		          case "/" => Some($deleteAll)
+		          case str : String => Some($deleteResource(resourceId))
 		        }	        
 		        
-		      case HttpMethod.OPTIONS => $opt(resourceId).handler
-		      case HttpMethod.HEAD => $head(resourceId).handler
+		      case HttpMethod.OPTIONS => Some($opt(resourceId))
+		      case HttpMethod.HEAD => Some($head(resourceId))
 		      case _ => None
 		    }
 		    
 		    canonicalMethodBody match {
-		      case Some(handler : ApiMethodBodyHandler) => HttpResourceExecutor(this, req.servicePath, canonicalMethodBody).execute(req, resp)
+		      case Some(handler : RestMethodBodyDef) => HttpResourceExecutor(this, req.servicePath, canonicalMethodBody).execute(req, resp)
 		      case _ => httpErrorResult(404, "Method is not supported for canonical RESTful service!")
 		    }
 		  }
 	   }
 	}
 	
-	def $list : ApiMethodDef
-	def $replaceAll : ApiMethodDef = apiMethod as {
+	def $list : RestMethodBodyDef
+	def $replaceAll : RestMethodBodyDef = restMethod as {
 	  httpErrorResult(501, "Method replace collection is not implemented!")
 	}
-	def $deleteAll : ApiMethodDef = apiMethod as {
+	def $deleteAll : RestMethodBodyDef = restMethod as {
 	  httpErrorResult(501, "Method delete all collection is not implemented!")
 	}
-	def $newResource: ApiMethodDef
-	def $getResource( resourceId : String ) : ApiMethodDef
-	def $replaceResource( resourceId : String) : ApiMethodDef	
-	def $deleteResource( resourceId : String) : ApiMethodDef
+	def $newResource: RestMethodBodyDef
+	def $getResource( resourceId : String ) : RestMethodBodyDef
+	def $replaceResource( resourceId : String) : RestMethodBodyDef	
+	def $deleteResource( resourceId : String) : RestMethodBodyDef
 	
-	def $opt( resourceId : String ) : ApiMethodDef = apiMethod as {
+	def $opt( resourceId : String ) : RestMethodBodyDef = restMethod as {
 	  httpOkResult
 	}
 	
-	def $head( resourceId : String ) : ApiMethodDef = apiMethod as {
+	def $head( resourceId : String ) : RestMethodBodyDef = restMethod as {
 	  httpOkResult
 	}
 	
