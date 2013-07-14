@@ -87,7 +87,7 @@ class MainServlet extends HttpServlet {
     resourcesFactory.split(",").foreach(resourcesFactoryClassName => {
     	val resourcesFactoryClass = Class.forName(resourcesFactoryClassName.trim())
     	val resourcesFactoryInstance = resourcesFactoryClass.newInstance().asInstanceOf[HttpResourcesFactory]
-    	resourcesFactoryInstance.createResources(registry)
+    	resourcesFactoryInstance.createResources(registry, this.getServletContext(), this.getServletConfig())
     })
 
   }
