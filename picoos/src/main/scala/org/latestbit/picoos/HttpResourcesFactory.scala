@@ -17,6 +17,9 @@
 
 package org.latestbit.picoos
 
+import javax.servlet.ServletContext
+import javax.servlet.ServletConfig
+
 trait HttpResourcesFactory {
-  def createResources(registry : HttpResourcesRegistry)
+  def createResources(registry : HttpResourcesRegistry, servletContext : ServletContext, servletConfig : ServletConfig)
 }
