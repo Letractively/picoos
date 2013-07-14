@@ -40,4 +40,8 @@ class SessionManager {
 	def generateKey() : Array[Byte] = {
 	  KeyGenerator.getInstance(algorithm).generateKey().getEncoded()
 	}
+	
+	def generateKeyAsString() : String = {
+	  Hex.encodeHexString(generateKey)
+	}
 }
