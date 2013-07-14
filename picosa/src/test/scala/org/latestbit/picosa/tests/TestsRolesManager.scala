@@ -36,30 +36,31 @@ class TestsRolesManager extends FeatureSpec {
 	    val testRolePerms = rolesMgr.getPermissions("TestRole")
 	  	assert ( testRolePerms.hasPermission(Permission("Order", "Report")) )
 	  	assert ( testRolePerms.hasPermission("Order", "Report") )
-	  	assert ( testRolePerms.hasPermission("Order.Report") )	  	
-	  	assert ( testRolePerms.hasPermission("Read.User") )
+	  	assert ( testRolePerms.hasPermissionStrForm("Order.Report") )	  	
+	  	assert ( testRolePerms.hasPermissionStrForm("Read.User") )
 	  	
 	  	val adminRolePerms = rolesMgr.getPermissions("Administrator")
-	  	assert ( adminRolePerms.hasPermission("Anything.Anything") )
-	  	assert ( adminRolePerms.hasPermission("Test.Test") )
+	  	assert ( adminRolePerms.hasPermissionStrForm("Anything.Anything") )
+	  	assert ( adminRolePerms.hasPermissionStrForm("Test.Test") )	  	
 	  	
 	  	val viewerRolePerms = rolesMgr.getPermissions("Viewer")
-	  	assert ( !viewerRolePerms.hasPermission("Anything.Anything") )
-	  	assert ( viewerRolePerms.hasPermission("Read.Anything") )
+	  	assert ( !viewerRolePerms.hasPermissionStrForm("Anything.Anything") )
+	  	assert ( viewerRolePerms.hasPermissionStrForm("Read.Anything") )
 	  	
 	  	val reportViewerRolePerms = rolesMgr.getPermissions("ReportViewer")
-	  	assert ( !reportViewerRolePerms.hasPermission("Anything.Anything") )
-	  	assert ( reportViewerRolePerms.hasPermission("Read.Report") )
-	  	assert ( reportViewerRolePerms.hasPermission("Order.Report") )
-	  	assert ( reportViewerRolePerms.hasPermission("Anything.Report") )
+	  	assert ( !reportViewerRolePerms.hasPermissionStrForm("Anything.Anything") )
+	  	assert ( reportViewerRolePerms.hasPermissionStrForm("Read.Report") )
+	  	assert ( reportViewerRolePerms.hasPermissionStrForm("Order.Report") )
+	  	assert ( reportViewerRolePerms.hasPermissionStrForm("Anything.Report") )
 	  }
 	  
 	  scenario("Checking permissions for mixed roles") {
    	    val testPerms = rolesMgr.getPermissions(Seq("TestRole", "ReportViewer"))
-	  	assert ( testPerms.hasPermission("Order.Report") )	  	
-	  	assert ( testPerms.hasPermission("Read.User") )
-	  	assert ( testPerms.hasPermission("Anything.Report") )
-	  	assert ( !testPerms.hasPermission("Anything.Anything") )
+	  	assert ( testPerms.hasPermissionStrForm("Order.Report") )	  	
+	  	assert ( testPerms.hasPermissionStrForm("Read.User") )
+	  	assert ( testPerms.hasPermissionStrForm("Anything.Report") )
+	  	assert ( testPerms.hasPermissionsStrForm(Seq("Read.User", "Anything.Report", "Order.Report")) )
+	  	assert ( !testPerms.hasPermissionStrForm("Anything.Anything") )
 
 	  }
 	}
