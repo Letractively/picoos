@@ -110,7 +110,8 @@ class MainServlet extends HttpServlet {
 		            httpMethod,
 		            servicePath,
 		            apiPathPrefix, 
-		            getServletConfig()
+		            getServletConfig(),
+		            getServletContext()
 		    )
 		    val resourceResp = HttpResourceResponse(resp)
 	    	registry.proceedRequest( resourceReq, resourceResp )		          
