@@ -27,6 +27,7 @@ trait RolesManager {
 	def getPermissionsByRoles(roles : Seq[Role]) : PicosaPermissions
 	def getPermissions(role : String) : PicosaPermissions = getPermissions(Seq(role))
 	def getPermissions(roles : Seq[String]) : PicosaPermissions = getPermissionsByRoles(roles.map(Role(_)(None)))
+	def checkAccess(roles : Seq[String], permissions : Seq[String]) : Boolean
 }
 
 class BasicRolesManager(val rolesDescXML : InputStream) extends RolesManager {
@@ -54,5 +55,7 @@ class BasicRolesManager(val rolesDescXML : InputStream) extends RolesManager {
     roles.foldLeft(new PicosaPermissions())( (all, item) => all ++ permissions(item))
   }
   
-  
+  override def checkAccess(roles : Seq[String], permissions : Seq[String]) : Boolean = {
+    getPermissions(roles).hasPermissionsStrForm(permissions)
+  }
 }

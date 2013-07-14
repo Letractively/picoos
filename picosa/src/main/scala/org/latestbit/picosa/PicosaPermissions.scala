@@ -25,11 +25,17 @@ class PicosaPermissions(val permissions : Seq[Permission] = Seq()) {
 			new PicosaPermissions( permissions ++ that.permissions.filter( item => !this.hasPermission(item)) )
 	}
 	
-	def hasPermission ( perm: String ) : Boolean = hasPermission(perm.split("\\.")(0), perm.split("\\.")(1))
+	def hasPermissionStrForm ( perm: String ) : Boolean = hasPermission(perm.split("\\.")(0), perm.split("\\.")(1))
+	
+	def hasPermissionsStrForm ( perms: Seq[String] ) : Boolean = hasPermissions( perms.map(perm => Permission(perm.split("\\.")(0), perm.split("\\.")(1))))
+	
+	def hasPermissions ( perms: Seq[Permission] ) : Boolean = {
+	  !perms.filter(perm => hasPermission(perm)).isEmpty
+	} 
 	
 	def hasPermission ( permAction: String, permObject : String) : Boolean = hasPermission(Permission(permAction, permObject))
 	
-	def hasPermission(perm : Permission) : Boolean = {
+	def hasPermission( perm : Permission) : Boolean = {
 	  permissions.find( 
 	      item => (
 	          ((item.permObject == perm.permObject) || item.permObject=="*")
