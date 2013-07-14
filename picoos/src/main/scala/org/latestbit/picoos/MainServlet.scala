@@ -93,7 +93,11 @@ class MainServlet extends HttpServlet {
   }
      
   def proceedRequest(httpMethod : HttpMethod, req : HttpServletRequest , resp : HttpServletResponse) = {
-    	val requestUri = req.getRequestURI()
+    	val requestUri : String =  Option(req.getAttribute("javax.servlet.include.request_uri")) match {
+    	  case Some(vl) => vl.asInstanceOf[String] 
+    	  case _ => req.getRequestURI()
+    	}
+    	
 	    val apiPathPrefix = getAPIPathPrefix()
 	    val idx = requestUri.indexOf(apiPathPrefix)
 	    if(idx != -1) {
