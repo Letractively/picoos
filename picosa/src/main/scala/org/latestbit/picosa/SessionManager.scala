@@ -27,6 +27,10 @@ class SessionManager {
   
 	val algorithm = "HmacSHA1"
 	  
+	def createSessionKey( key : String, userId : String, authType : String, expiration : Long ) : String = {
+	  createSessionKey(Hex.decodeHex(key.toCharArray()), userId, authType, expiration)
+	}
+	  
 	def createSessionKey( key : Array[Byte], userId : String, authType : String, expiration : Long ) : String = {
 	   
 	  val keySpec = new SecretKeySpec(
@@ -42,6 +46,10 @@ class SessionManager {
 	}
 	
 	def generateKeyAsString() : String = {
-	  Hex.encodeHexString(generateKey)
+	  keyToString(generateKey())
+	}
+	
+	def keyToString(key : Array[Byte]) : String = {
+	  Hex.encodeHexString(key)
 	}
 }
