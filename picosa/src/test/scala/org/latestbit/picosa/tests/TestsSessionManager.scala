@@ -26,7 +26,10 @@ class TestsSessionManager extends FeatureSpec {
 	  
 	  scenario("Generate key & session") {
 	    val key = sessionManager.generateKey()
-	    println(key)
+	    val keyAsStr = sessionManager.generateKeyAsString()
+	    println(keyAsStr)
+	    assert ( !keyAsStr.isEmpty() && keyAsStr.length() > 0 )
+	    
 	    val userId = "TestUser"
 	    val authType = "OAuth2"
 	    val time = System.currentTimeMillis()
