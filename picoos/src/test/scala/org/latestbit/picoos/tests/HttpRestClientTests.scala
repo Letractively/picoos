@@ -21,6 +21,10 @@ class HttpRestClientTests extends FeatureSpec {
       val userAgent : UserAgentJson = restClient.httpGetJSon[UserAgentJson]("http://httpbin.org/user-agent")
       assert ( userAgent.`user-agent`!=null )
       assert ( userAgent.`user-agent`.equalsIgnoreCase("TestPicoosClient") )
+      
+      val postRes = restClient.httpPost("http://httpbin.org/post", Map("test"->"value"))
+      assert (postRes!=null)
+      assert (postRes.length() > 0)
     }
   }
 
