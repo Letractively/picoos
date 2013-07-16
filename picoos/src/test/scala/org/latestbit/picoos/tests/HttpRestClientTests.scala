@@ -25,7 +25,6 @@ class HttpRestClientTests extends FeatureSpec {
           )
       ).body
       assert ( getInfo!=null )
-      println(getInfo.get("args").get.asInstanceOf[collection.mutable.Map[String, Any]])
       assert ( getInfo.get("args").get.asInstanceOf[collection.mutable.Map[String, Any]].size == 2)
       
       val userAgent : UserAgentJson = restClient.httpGetJSon[UserAgentJson]("http://httpbin.org/user-agent").body

@@ -50,6 +50,7 @@ class HttpResourceTests extends FeatureSpec {
   	    assert ( httpResource.getUsers.execute() .equals  ( httpOkResult))
   	    assert ( httpResource.getUsers2.execute() .equals  ( httpTextResult("Hello!")))
   	    assert ( httpResource.getUsers3.execute(null).isInstanceOf[httpJsonResult[_]])
+  	    
   	    intercept[Exception] {
   	      httpResource.getUsers3.execute()
   	    }
