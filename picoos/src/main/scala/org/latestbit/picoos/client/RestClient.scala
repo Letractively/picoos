@@ -4,43 +4,94 @@ import java.net.URL
 import scala.collection.JavaConversions._
 import java.io.OutputStreamWriter
 import org.latestbit.picoos.serializers.JSonSerializer
+import java.net.HttpURLConnection
 
-class RestClient(val userAgent : String = "PicoosRESTClient", val encoding : String = "UTF-8", connectionTimeoutMs : Int = 10000) {
-	
-	def httpGet(url: String) : String = {
-	  val connection = new URL(url).openConnection()
-	  connection.setRequestProperty("User-Agent", userAgent)
-	  connection.setConnectTimeout(connectionTimeoutMs)
-	  connection.connect()
-	  scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n")
-	}
-	
-	def httpGetJSon[T : Manifest](url: String) : T = {
-	  JSonSerializer.deserialize[T](httpGet(url))
-	}
-	
-	def httpPost(url: String, data: Map[String, String]) = {
-	  val connection = new URL(url).openConnection()
-	  connection.setRequestProperty("User-Agent", userAgent)
-	  connection.setConnectTimeout(connectionTimeoutMs)
-	  connection.setDoOutput(true)
-	  connection.connect()
-	  
-	  val output = new OutputStreamWriter(connection.getOutputStream())
-      output.write(encodePostParameters(data))
-      output.flush
-      output.close      
-
-      scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n")
-	}
-	
-	def httpPostJSon[T : Manifest](url: String, data: Map[String, String]) = {
-	  JSonSerializer.deserialize[T](httpPost(url, data))
-	}
-	
-	def encodePostParameters(params : Map[String, String]) : String = {
+object HttpFormatter {
+  
+  	def encodeParams(params : Map[String, String]) : String = {
 	  params.foldLeft("")((all, item) => all+"&"+urlEncode(item._1)+"="+urlEncode(item._2))
 	}
 	
-	def urlEncode(str : String) : String = java.net.URLEncoder.encode(str, encoding)
+	def urlEncode(str : String, encoding : String = "UTF-8") : String = java.net.URLEncoder.encode(str, encoding)
+	
+	def formatUrlWithParams(url : String, params : Map[String, String]) =
+	  url+"?"+encodeParams(params).substring(1)
+}
+
+case class RestClientResult[T](val body : T, httpResponseCode : Int, httpResponseMessage : String)
+
+class RestClient(
+    val userAgent : String = "PicoosRESTClient", 
+    val encoding : String = "UTF-8", 
+    connectionTimeoutMs : Int = 10000) {
+	
+	def httpGet(url: String) : RestClientResult[String] = {
+	  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+	  connection.setRequestProperty("User-Agent", userAgent)
+	  connection.setConnectTimeout(connectionTimeoutMs)
+	  connection.connect()
+	  
+	  RestClientResult[String](
+	      scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
+	      connection.getResponseCode(),
+	      connection.getResponseMessage()
+	  )
+	}
+	
+	def httpGetJSon[T : Manifest](url: String) : RestClientResult[T] = {
+	  val strResult = httpGet(url)
+	  RestClientResult[T](
+			  JSonSerializer.deserialize[T](strResult.body),
+			  strResult.httpResponseCode,
+			  strResult.httpResponseMessage
+	  )			  
+	}
+	
+	def httpPost(url: String, data: Map[String, String]) : RestClientResult[String] = {
+	  httpExchangeData(url, "POST", HttpFormatter.encodeParams(data))
+	}
+	
+	def httpPostAndGetJSon[T : Manifest](url: String, data: Map[String, String]) : RestClientResult[T] = {
+	  val strResult = httpPost(url, data)
+	  RestClientResult[T](
+	      JSonSerializer.deserialize[T](strResult.body),
+	      strResult.httpResponseCode,
+	      strResult.httpResponseMessage
+	  )
+	}
+	
+	def httpPut(url: String, data: Map[String, String]) : RestClientResult[String] = {
+	  httpExchangeData(url, "PUT", HttpFormatter.encodeParams(data))
+	}
+	
+	def httpPutAndGetJSon[T : Manifest](url: String, data: Map[String, String]) : RestClientResult[T] = {
+	  val strResult = httpPut(url, data)
+	  RestClientResult[T](
+	      JSonSerializer.deserialize[T](strResult.body),
+	      strResult.httpResponseCode,
+	      strResult.httpResponseMessage
+	  )
+	}
+	
+	def httpExchangeData(url : String, httpMethod : String, inputData : String) : RestClientResult[String] = {
+	  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+	  connection.setRequestProperty("User-Agent", userAgent)
+	  connection.setConnectTimeout(connectionTimeoutMs)
+	  connection.setDoOutput(true)
+	  connection.setRequestMethod(httpMethod)
+	  connection.connect()
+	  
+	  val output = new OutputStreamWriter(connection.getOutputStream())
+      output.write(inputData)
+      output.flush
+      output.close      
+
+      val result = RestClientResult(
+          scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
+          connection.getResponseCode(),
+          connection.getResponseMessage()
+      )
+      connection.disconnect()
+      result
+	}
 }
