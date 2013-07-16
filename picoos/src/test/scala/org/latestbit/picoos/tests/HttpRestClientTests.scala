@@ -54,6 +54,12 @@ class HttpRestClientTests extends FeatureSpec {
       assert (postResJSon!=null)
       assert (postResJSon.get("headers").isDefined)
       assert (postResJSon.get("headers").get.asInstanceOf[collection.mutable.Map[String,Any]].get("User-Agent") == Some("TestPicoosClient"))
+      
+      val decodedParams = HttpFormatter.decodeParams("&test=value&test2=value2")
+      assert (decodedParams.size == 2)
+      assert (decodedParams.get("test").isDefined)
+      assert (decodedParams.get("test") == Some("value"))
+      assert (decodedParams.get("test2").isDefined)
     }
   }
 
