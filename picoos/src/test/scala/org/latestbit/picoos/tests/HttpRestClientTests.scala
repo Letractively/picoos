@@ -32,7 +32,7 @@ class HttpRestClientTests extends FeatureSpec {
       assert ( userAgent.`user-agent`.equalsIgnoreCase("TestPicoosClient") )
       
       
-      val postRes = restClient.httpPost("http://httpbin.org/post", Map("test"->"value")).body
+      val postRes = restClient.httpPost("http://httpbin.org/post", Map("test"->"value") ).body
       assert (postRes!=null)
       assert (postRes.length() > 0)
       
