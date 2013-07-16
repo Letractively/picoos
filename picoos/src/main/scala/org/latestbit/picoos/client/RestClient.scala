@@ -34,6 +34,10 @@ class RestClient(val userAgent : String = "PicoosRESTClient", val encoding : Str
       scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n")
 	}
 	
+	def httpPostJSon[T : Manifest](url: String, data: Map[String, String]) = {
+	  JSonSerializer.deserialize[T](httpPost(url, data))
+	}
+	
 	def encodePostParameters(params : Map[String, String]) : String = {
 	  params.foldLeft("")((all, item) => all+"&"+urlEncode(item._1)+"="+urlEncode(item._2))
 	}
