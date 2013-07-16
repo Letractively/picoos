@@ -4,10 +4,15 @@ import org.scalatest.FeatureSpec
 import org.latestbit.picoos.client._
 import scala.reflect._
 import org.latestbit.picoos.serializers.JSonSerializer
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 
 case class IPInfo(origin: String)
 case class UserAgentJson(`user-agent` : String)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+case class IPInfo2(origin : String, unexistsQQQQ : String)
+
 
 class HttpRestClientTests extends FeatureSpec {
   feature("RESTClient functionality tests") {
@@ -26,6 +31,15 @@ class HttpRestClientTests extends FeatureSpec {
       ).body
       assert ( getInfo!=null )
       assert ( getInfo.get("args").get.asInstanceOf[collection.mutable.Map[String, Any]].size == 2)
+      
+      val ipInfo2 : IPInfo2 = restClient.httpGetJSon[IPInfo2](
+          HttpFormatter.formatUrlWithParams(
+              "http://httpbin.org/get",
+              Map("fdgg" -> "ggg", "sss"-> "hhh")
+          )
+      ).body
+      assert ( ipInfo2!=null )
+      assert ( ipInfo2.origin.length() > 0)
       
       val userAgent : UserAgentJson = restClient.httpGetJSon[UserAgentJson]("http://httpbin.org/user-agent").body
       assert ( userAgent.`user-agent`!=null )
