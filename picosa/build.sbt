@@ -14,7 +14,6 @@ scalaVersion := "2.10.2"
 
 resolvers ++= Seq(
 	"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-	"Jerkson" at "http://repo.codahale.com",
 	"Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/"
 ) 
 
