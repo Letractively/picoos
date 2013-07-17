@@ -45,7 +45,7 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, restMeth
 			    result.proceedHttpResponse( resp )
 			}
 			else
-			  httpErrorResult(403, "Forbidden access to the method "+path)
+			  httpErrorResult(403, "Access denied to the method "+path).proceedHttpResponse(resp)
 	    }
 	    else
 	      throw new Exception("Unable to execute undefined method at "+path)
