@@ -44,6 +44,10 @@ class SessionManager {
 	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp
 		
 	case class SessionParams(userId : String, authParams : String, timestamp : Long)
+	
+	def decodeSessionParams(key : String, sessionKey : String) : SessionParams = {
+	  decodeSessionParams(Hex.decodeHex(key.toCharArray()),sessionKey)
+	}
 	def decodeSessionParams(key : Array[Byte], sessionKey : String) : SessionParams = {
 	  val decodedStr = sessionKey.split(":")
 	  val decodedParams = SessionParams(decodedStr(0), decodedStr(1), decodedStr(2).toLong)
