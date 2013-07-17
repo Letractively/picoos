@@ -52,7 +52,7 @@ class BasicRolesManager(val rolesDescXML : InputStream) extends RolesManager {
   override def getRoles() : Seq[Role] = permissions.keys.toSeq
   
   override def getPermissionsByRoles(roles : Seq[Role]) : PicosaPermissions = {
-    roles.foldLeft(new PicosaPermissions())( (all, item) => all ++ permissions(item))
+    roles.filter(permissions.get(_).isDefined).foldLeft(new PicosaPermissions())( (all, item) => all ++ permissions(item))
   }
   
   override def checkAccess(roles : Seq[String], permissions : Seq[String]) : Boolean = {
