@@ -22,6 +22,7 @@ import javax.crypto.spec.SecretKeySpec
 import javax.crypto.Mac
 import javax.crypto.KeyGenerator
 
+case class SessionParams(userId : String, authParams : String, timestamp : Long)
 
 class SessionManager {
   
@@ -42,8 +43,7 @@ class SessionManager {
 	}
 	
 	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp
-		
-	case class SessionParams(userId : String, authParams : String, timestamp : Long)
+			
 	
 	def decodeSessionParams(key : String, sessionKey : String) : SessionParams = {
 	  decodeSessionParams(Hex.decodeHex(key.toCharArray()),sessionKey)
