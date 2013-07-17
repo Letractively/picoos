@@ -27,18 +27,32 @@ class SessionManager {
   
 	val algorithm = "HmacSHA1"
 	  
-	def createSessionKey( key : String, userId : String, authType : String, expiration : Long ) : String = {
-	  createSessionKey(Hex.decodeHex(key.toCharArray()), userId, authType, expiration)
+	def createSessionKey( key : String, userId : String, authParams : String, timestamp : Long ) : String = {
+	  createSessionKey(Hex.decodeHex(key.toCharArray()), userId, authParams, timestamp)
 	}
 	  
-	def createSessionKey( key : Array[Byte], userId : String, authType : String, expiration : Long ) : String = {
+	def createSessionKey( key : Array[Byte], userId : String, authParams : String, timestamp : Long ) : String = {
 	   
 	  val keySpec = new SecretKeySpec(
         key, algorithm 
       )
 	  val encrypt = Mac.getInstance(algorithm)
 	  encrypt.init(keySpec)
-	  Hex.encodeHexString(encrypt.doFinal( (userId+":"+authType+":"+expiration.toString).getBytes() ))	  
+	  formatSessionParams(userId, authParams, timestamp)+":"+Hex.encodeHexString(encrypt.doFinal( (userId+":"+authParams+":"+timestamp.toString).getBytes() ))	  
+	}
+	
+	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp
+		
+	case class SessionParams(userId : String, authParams : String, timestamp : Long)
+	def decodeSessionParams(key : Array[Byte], sessionKey : String) : SessionParams = {
+	  val decodedStr = sessionKey.split(":")
+	  val decodedParams = SessionParams(decodedStr(0), decodedStr(1), decodedStr(2).toLong)
+	  val checkSessionValidity = createSessionKey(key, decodedParams.userId, decodedParams.authParams, decodedParams.timestamp)
+	  if(checkSessionValidity.equals(sessionKey)) {
+	    decodedParams
+	  }
+	  else
+	    null
 	}
 	
 	def generateKey() : Array[Byte] = {

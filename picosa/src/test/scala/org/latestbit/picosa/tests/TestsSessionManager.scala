@@ -43,5 +43,25 @@ class TestsSessionManager extends FeatureSpec {
 	    val sessionKey4 = sessionManager.createSessionKey( anotherKey, userId, authType, time )
 	    assert (!sessionKey1.equals(sessionKey4))
 	  }
+	  
+	  scenario("Check session security") {
+	    val key = sessionManager.generateKey()
+	    val keyAsStr = sessionManager.keyToString(key)
+
+	    val userId = "TestUser"
+	    val authType = "OAuth2"
+	    val time = System.currentTimeMillis()
+	    
+	    val sessionKey = sessionManager.createSessionKey( key, userId, authType, time )
+	    val sessionParams = sessionManager.decodeSessionParams(key, sessionKey)
+	    assert(sessionParams.userId.equals(userId))
+	    assert(sessionParams.authParams.equals(authType))
+	    assert(sessionParams.timestamp == time)
+	    
+	    val invalidSessionKey = "TestUser:OO:"+time+sessionKey.substring(sessionKey.lastIndexOf(":"))
+	    println(invalidSessionKey)
+	    val sessionParams2 = sessionManager.decodeSessionParams(key, invalidSessionKey)
+	    assert( sessionParams2 == null)
+	  }
 	}
 }
