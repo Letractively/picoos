@@ -38,8 +38,8 @@ class PicosaPermissions(val permissions : Seq[Permission] = Seq()) {
 	def hasPermission( perm : Permission) : Boolean = {
 	  permissions.find( 
 	      item => (
-	          ((item.permObject == perm.permObject) || item.permObject=="*")
-	          && ((item.permAction == perm.permAction || item.permAction == "*")) 
+	          ((item.permObject.toUpperCase() == perm.permObject.toUpperCase()) || item.permObject=="*")
+	          && ((item.permAction.toUpperCase() == perm.permAction.toUpperCase() || item.permAction == "*")) 
 	      )
 	  ).isDefined
 	}
