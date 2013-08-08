@@ -44,31 +44,32 @@ object httpOkResult extends httpOkResult(CachingOptions())
 case class httpNoResult(override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags)
 object httpNoResult extends httpNoResult(CachingOptions())
 
-case class httpTextResult(textResult : String, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
+case class httpTextResult(textResult : String, charset: String = "UTF-8", override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	   super.proceedHttpResponse(resp)
-	   resp.http.setContentType("text/plain")
-	   resp.http.getWriter().append(textResult)
-	   resp.http.getWriter().flush()	   
+	   resp.http.setContentType("text/plain; charset="+charset)
+	   resp.http.getOutputStream().write(textResult.getBytes(charset))
+	   resp.http.getOutputStream().flush()
+	   //resp.http.getWriter().flush()	   
   }
 } 
-case class httpJsonResult[T<:AnyRef](jsonObj : T, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
+case class httpJsonResult[T<:AnyRef](jsonObj : T, charset: String = "UTF-8", override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
   //lazy val textResult = Json.generate(jsonObj)
   lazy val textResult = JSonSerializer.serialize(jsonObj)
 
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
-      resp.http.setContentType("application/json")
-      resp.http.getWriter().append(textResult)
-      resp.http.getWriter().flush()
+      resp.http.setContentType("application/json; charset="+charset)
+      resp.http.getOutputStream().write(textResult.getBytes(charset))
+	  resp.http.getOutputStream().flush()
   }  
 }
 
-case class httpXmlResult(xmlObj : Node, override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags)  {
+case class httpXmlResult(xmlObj : Node, charset: String = "UTF-8", override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags)  {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
       resp.http.setContentType("text/xml")
-      scala.xml.XML.write(resp.http.getWriter(), xmlObj, "utf-8", true, null)
+      scala.xml.XML.write(resp.http.getWriter(), xmlObj, charset, true, null)
       resp.http.getWriter().flush()
 	}  
 }
