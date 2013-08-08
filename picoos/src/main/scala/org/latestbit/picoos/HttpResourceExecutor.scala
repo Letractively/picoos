@@ -45,8 +45,9 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, restMeth
 			    result.proceedHttpResponse( resp )
 			}
 			else {
-			  if(!resp.http.isCommitted())
+			  if(!resp.http.isCommitted()) {
 				  httpErrorResult(403, "Access denied to the method "+path).proceedHttpResponse(resp)
+			  }
 			}
 	    }
 	    else
