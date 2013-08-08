@@ -28,5 +28,12 @@ case class HttpResourceRequest(
     val servicePath : String,
     val servletPrefix : String,
     val servletConfig : ServletConfig,
-    val servletContext : ServletContext) {  	
+    val servletContext : ServletContext) {
+  
+  def isAjaxRequest() : Boolean = {
+    Option(http.getHeader("x-requested-with")) match {
+      case Some(vl : String) if vl.equalsIgnoreCase("XMLHttpRequest") => true
+      case _ => false
+    }	
+  }
 }
