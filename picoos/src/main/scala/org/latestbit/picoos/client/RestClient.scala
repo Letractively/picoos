@@ -5,6 +5,9 @@ import scala.collection.JavaConversions._
 import java.io.OutputStreamWriter
 import org.latestbit.picoos.serializers.JSonSerializer
 import java.net.HttpURLConnection
+import org.latestbit.picoos.PerfUtils
+import java.util.logging.Logger
+import java.util.logging.Level
 
 object HttpFormatter {
   
@@ -36,17 +39,21 @@ class RestClient(
     val encoding : String = "UTF-8", 
     connectionTimeoutMs : Int = 10000) {
 	
+    private final val log : Logger  = Logger.getLogger(classOf[RestClient].getName())
+  
 	def httpGet(url: String) : RestClientResult[String] = {
-	  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
-	  connection.setRequestProperty("User-Agent", userAgent)
-	  connection.setConnectTimeout(connectionTimeoutMs)
-	  connection.connect()
-	  
-	  RestClientResult[String](
-	      scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
-	      connection.getResponseCode(),
-	      connection.getResponseMessage()
-	  )
+	  PerfUtils.meausureTime {	    	
+		  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+		  connection.setRequestProperty("User-Agent", userAgent)
+		  connection.setConnectTimeout(connectionTimeoutMs)
+		  connection.connect()
+		  
+		  RestClientResult[String](
+		      scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
+		      connection.getResponseCode(),
+		      connection.getResponseMessage()
+		  )
+	  }(time => log.log(Level.FINE,s"The request to $url has been processed within $time ms."))
 	}
 	
 	def httpGetJSon[T : Manifest](url: String) : RestClientResult[T] = {
@@ -94,24 +101,26 @@ class RestClient(
 	}
 	
 	def httpExchangeData(url : String, httpMethod : String, inputData : String) : RestClientResult[String] = {
-	  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
-	  connection.setRequestProperty("User-Agent", userAgent)
-	  connection.setConnectTimeout(connectionTimeoutMs)
-	  connection.setDoOutput(true)
-	  connection.setRequestMethod(httpMethod)
-	  connection.connect()
-	  
-	  val output = new OutputStreamWriter(connection.getOutputStream())
-      output.write(inputData)
-      output.flush
-      output.close      
-
-      val result = RestClientResult(
-          scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
-          connection.getResponseCode(),
-          connection.getResponseMessage()
-      )
-      connection.disconnect()
-      result
+	  PerfUtils.meausureTime {
+		  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+		  connection.setRequestProperty("User-Agent", userAgent)
+		  connection.setConnectTimeout(connectionTimeoutMs)
+		  connection.setDoOutput(true)
+		  connection.setRequestMethod(httpMethod)
+		  connection.connect()
+		  
+		  val output = new OutputStreamWriter(connection.getOutputStream())
+	      output.write(inputData)
+	      output.flush
+	      output.close      
+	
+	      val result = RestClientResult(
+	          scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
+	          connection.getResponseCode(),
+	          connection.getResponseMessage()
+	      )
+	      connection.disconnect()
+	      result
+	   }(time => log.log(Level.FINE,s"The request to $url has been processed within $time ms."))
 	}
 }

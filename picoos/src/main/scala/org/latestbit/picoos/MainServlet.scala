@@ -117,8 +117,11 @@ class MainServlet extends HttpServlet {
 		            getServletConfig(),
 		            getServletContext()
 		    )
-		    val resourceResp = HttpResourceResponse(resp)
-	    	registry.proceedRequest( resourceReq, resourceResp )		          
+		    
+		    PerfUtils.meausureTime {
+	    		val resourceResp = HttpResourceResponse(resp)
+	    		registry.proceedRequest( resourceReq, resourceResp )
+	    	}(time => log.log(Level.FINE,s"The request to $servicePath/$httpMethod has been processed within $time ms."))
 	    }
 	    else {
 	      log.log(Level.WARNING,"Unable to process request to empty or unknow prefix ("+requestUri+"). Check your web.xml settings!")
