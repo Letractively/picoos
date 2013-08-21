@@ -53,7 +53,7 @@ class RestClient(
 		      connection.getResponseCode(),
 		      connection.getResponseMessage()
 		  )
-	  }(time => log.log(Level.FINE,s"The request to $url has been processed within $time ms."))
+	  }(time => log.logp(Level.FINE, classOf[RestClient].getName(), "httpGet", s"The request to $url has been processed within $time ms."))
 	}
 	
 	def httpGetJSon[T : Manifest](url: String) : RestClientResult[T] = {
@@ -121,6 +121,6 @@ class RestClient(
 	      )
 	      connection.disconnect()
 	      result
-	   }(time => log.log(Level.FINE,s"The request to $url has been processed within $time ms."))
+	   }(time => log.logp(Level.FINE,classOf[RestClient].getName(), "httpExchangeData", s"The request to $url has been processed within $time ms."))
 	}
 }
