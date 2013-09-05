@@ -162,17 +162,28 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 	   }
 	}
 	
-	def $list : RestMethodBodyDef
+	def $list : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method list entiry collection is not implemented!")
+	}
+	
 	def $replaceAll : RestMethodBodyDef = restMethod as {
 	  httpErrorResult(501, "Method replace collection is not implemented!")
 	}
 	def $deleteAll : RestMethodBodyDef = restMethod as {
 	  httpErrorResult(501, "Method delete all collection is not implemented!")
 	}
-	def $newResource: RestMethodBodyDef
+	def $newResource: RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method new resource is not implemented!")
+	}
+	def $replaceResource( resourceId : String) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method replace resource is not implemented!")
+	}	
+	def $deleteResource( resourceId : String) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method delete resource is not implemented")
+	}
+	
 	def $getResource( resourceId : String ) : RestMethodBodyDef
-	def $replaceResource( resourceId : String) : RestMethodBodyDef	
-	def $deleteResource( resourceId : String) : RestMethodBodyDef
+	
 	
 	def $opt( resourceId : String ) : RestMethodBodyDef = restMethod as {
 	  httpOkResult
