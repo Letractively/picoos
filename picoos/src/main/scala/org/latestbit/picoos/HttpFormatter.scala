@@ -16,12 +16,16 @@ object HttpFormatter {
   	  }.toMap
   	}
 	
-	def urlEncode(str : String, encoding : String = "UTF-8") : String = java.net.URLEncoder.encode(str, encoding)
-	def urlEncodeOnlyNonAscii(str : String, encoding : String = "UTF-8") : String = {
+	def urlEncode(url : String, encoding : String = "UTF-8") : String = java.net.URLEncoder.encode(url, encoding)
+	def urlEncodeOnlyNonAscii(url : String, skipParams : Boolean = true, encoding : String = "UTF-8") : String = {
+	  val str = skipParams match {
+	    case true if(url.contains("?")) => url.substring(0, url.indexOf("?"))
+	    case _ => url
+	  }
 	  urlEncode(str,encoding).replace("%3A",":").replace("%2F","/").replace("%3F","?").replace("%3D","=").replace("%26","&")
 	}
 	
-	def urlDecode(str : String, encoding : String = "UTF-8") : String = java.net.URLDecoder.decode(str, encoding)
+	def urlDecode(url : String, encoding : String = "UTF-8") : String = java.net.URLDecoder.decode(url, encoding)
 	
 	def formatUrlWithParams(url : String, params : Map[String, String]) =
 	  url+"?"+encodeParams(params).substring(1)
