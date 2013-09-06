@@ -22,7 +22,7 @@ object HttpFormatter {
 	    case true if(url.contains("?")) => url.substring(0, url.indexOf("?"))
 	    case _ => url
 	  }
-	  urlEncode(str,encoding).replace("%3A",":").replace("%2F","/").replace("%3F","?").replace("%3D","=").replace("%26","&")
+	  urlEncode(str,encoding).replace("%3A",":").replace("%2F","/").replace("%3F","?").replace("%3D","=").replace("%26","&").replace("+"," ")
 	}
 	
 	def urlDecode(url : String, encoding : String = "UTF-8") : String = java.net.URLDecoder.decode(url, encoding)
