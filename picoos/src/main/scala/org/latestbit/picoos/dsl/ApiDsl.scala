@@ -73,10 +73,10 @@ case class httpXmlResult(xmlObj : Node, charset: String = "UTF-8", override val 
       resp.http.getWriter().flush()
 	}  
 }
-case class httpRedirectResult(url : String, override val cacheFlags : CachingOptions= CachingOptions())  extends RestMethodResult(cacheFlags) {
+case class httpRedirectResult(url : String, urnEncoding : String = "UTF8", override val cacheFlags : CachingOptions= CachingOptions())  extends RestMethodResult(cacheFlags) {
 	override def proceedHttpResponse(resp : HttpResourceResponse) = {
 		super.proceedHttpResponse(resp)	  
-		resp.http.sendRedirect( url )	  
+		resp.http.sendRedirect( HttpFormatter.urlEncodeOnlyNonAscii(url, urnEncoding) )	  
 	}
 }
 
