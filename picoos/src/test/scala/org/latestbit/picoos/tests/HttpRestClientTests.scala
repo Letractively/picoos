@@ -62,5 +62,13 @@ class HttpRestClientTests extends FeatureSpec {
       assert (decodedParams.get("test2").isDefined)
     }
   }
-
+  
+  feature("HttpFormatter functionality tests") {
+    val testUrl = "http://www.example.net/test/тест本?test=тест本&test2=тест本";
+    assert ( HttpFormatter.urlDecode(HttpFormatter.urlEncode(testUrl)).equals(testUrl))
+    val urlWithAscii = HttpFormatter.urlEncodeOnlyNonAscii(testUrl)
+    assert ( urlWithAscii.contains("http://"))
+    assert ( urlWithAscii.contains("&test2="))
+    assert ( urlWithAscii.contains("/test/"))
+  }
 }
