@@ -26,6 +26,10 @@ object HttpFormatter {
   	}
 	
 	def urlEncode(str : String, encoding : String = "UTF-8") : String = java.net.URLEncoder.encode(str, encoding)
+	def urlEncodeOnlyNonAscii(str : String, encoding : String = "UTF-8") : String = {
+	  urlEncode(str,encoding).replace("%3A",":").replace("%2F","/").replace("%3F","?").replace("%3D","=").replace("%26","&")
+	}
+	
 	def urlDecode(str : String, encoding : String = "UTF-8") : String = java.net.URLDecoder.decode(str, encoding)
 	
 	def formatUrlWithParams(url : String, params : Map[String, String]) =
