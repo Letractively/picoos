@@ -182,8 +182,9 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 	  httpErrorResult(501, "Method delete resource is not implemented")
 	}
 	
-	def $getResource( resourceId : String ) : RestMethodBodyDef
-	
+	def $getResource( resourceId : String ) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method get resource is not implemented")
+	}	
 	
 	def $opt( resourceId : String ) : RestMethodBodyDef = restMethod as {
 	  httpOkResult
