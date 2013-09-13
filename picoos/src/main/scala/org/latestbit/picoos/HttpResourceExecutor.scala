@@ -30,6 +30,10 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, restMeth
 				    case Some(authenticator : HttpAuthenticator) => authenticator.checkAccess(req, resp, resource, path, restMethod.get)
 				    case _ => throw new Exception("Restricted method at "+resource.resourcePath+" required authenticator");
 				  })
+				&& (restMethod.get.authParams.get.authFunction match {
+				  case Some(func : ((String, HttpResourceRequest)=>Boolean)) => func(path, req)
+			      case _ => true
+			    })
 			   ) || (restMethod.get.authParams.isEmpty)
 			
 			if(accessGranted) {
