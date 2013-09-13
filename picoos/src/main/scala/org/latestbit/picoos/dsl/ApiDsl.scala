@@ -87,7 +87,7 @@ case class httpErrorResult(errorCode : Int, errorString : String, override val c
 	}
 }
 
-class AuthParams(val permissions : Seq[String])
+class AuthParams(val permissions : Seq[String], val authFunction : Option[( (String, HttpResourceRequest) => Boolean )]=None)
 class RestParams(val path : String = null, val httpMethod : HttpMethod = HttpMethod.ANY_METHOD)
 
 class RestMethodBodyDef {
