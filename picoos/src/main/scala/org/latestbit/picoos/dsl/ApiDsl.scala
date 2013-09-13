@@ -87,7 +87,7 @@ case class httpErrorResult(errorCode : Int, errorString : String, override val c
 	}
 }
 
-class AuthParams(val permissions : Seq[String], val authFunction : Option[( (String, HttpResourceRequest) => Boolean )]=None)
+class AuthParams(val permissions : Seq[String], val authFunction : Option[( (String, HttpResourceRequest) => Boolean )])
 class RestParams(val path : String = null, val httpMethod : HttpMethod = HttpMethod.ANY_METHOD)
 
 class RestMethodBodyDef {
@@ -189,7 +189,7 @@ trait ApiDsl {
 	  }
 	}
 	
-	case class requireAuth( override val permissions : Seq[String] = Seq() ) extends AuthParams(permissions) with RequireAuthTrait {
+	case class requireAuth( override val permissions : Seq[String] = Seq(), override val authFunction : Option[( (String, HttpResourceRequest) => Boolean )]=None ) extends AuthParams(permissions, authFunction) with RequireAuthTrait {
 	  override def restMethod(in : RestMethodBodyDef) : RestMethodBodyDef = { 
 			  in.withAuthParams(this) 
 	  }
