@@ -29,5 +29,9 @@ class TestDsl extends ApiDsl {
   def test5 = requireAuth(permissions = Seq("Str", "Str2")) restMethod( path = "ggghhjhj", httpMethod = HttpMethod.GET ) as {
     httpNoResult
   }
+  
+  def test6 = requireAuth(permissions = Seq("Str", "Str2"), authFunction=None) restMethod( path = "ggghhjhj", httpMethod = HttpMethod.GET ) as {
+    httpNoResult
+  }
 
 }
