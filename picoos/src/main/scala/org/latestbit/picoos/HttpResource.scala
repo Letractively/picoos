@@ -172,6 +172,7 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 	def $deleteAll : RestMethodBodyDef = restMethod as {
 	  httpErrorResult(501, "Method delete all collection is not implemented!")
 	}
+	
 	def $newResource: RestMethodBodyDef = restMethod as {
 	  httpErrorResult(501, "Method new resource is not implemented!")
 	}
@@ -194,4 +195,83 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 	  httpOkResult
 	}
 	
+}
+
+
+abstract class HttpCanonicalCollectionResource(resourcePath : String, extMethodsParamName : String = "f") extends HttpCanonicalResource(resourcePath, extMethodsParamName) {
+	private def getColAndResId(resourceId : String) : Tuple2[String,String] = {
+	  val idxRes = resourceId.indexOf("/")
+	  if(idxRes != -1) {
+	    Tuple2(resourceId.substring(0, idxRes),resourceId.substring(idxRes))
+	  }
+	  else {
+	    Tuple2(resourceId, "/")
+	  }
+	}
+	
+	override def $list : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method list all collections is not implemented!")
+	}
+	
+	final override def $newResource: RestMethodBodyDef = $newCollection
+	
+	override def $replaceAll : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method replace all collections is not implemented!")
+	}
+	override def $deleteAll : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method delete all collections is not implemented!")
+	}
+	
+	def $newCollection : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method a new collection is not implemented!")
+	}
+	
+	def $deleteCollection(collectionId : String): RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Replace collection is not implemented!")
+	}
+		
+	final override def $replaceResource( resourceId : String) : RestMethodBodyDef = {
+	  getColAndResId(resourceId) match {
+	    case (vl : Tuple2[String, String]) if vl._2=="/" => $newResource(vl._1)
+	    case (vl : Tuple2[String, String]) => $replaceResource(vl._1, vl._2)
+	    case _ => null
+	  }
+	}
+	
+	def $newResource(collectionId : String): RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "New resource is not implemented!")
+	}
+	
+	def $replaceResource( collectionId : String, resourceId : String) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Replace a resource is not implemented!")
+	}
+	
+	final override def $deleteResource( resourceId : String) : RestMethodBodyDef = {
+	  getColAndResId(resourceId) match {
+	    case (vl : Tuple2[String, String]) if vl._2=="/" => $deleteCollection(vl._1)
+	    case (vl : Tuple2[String, String]) => $deleteResource(vl._1, vl._2)
+	    case _ => null
+	  }
+	}
+	
+	def $deleteResource( collectionId : String, resourceId : String ) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method delete resource is not implemented")
+	}
+	
+	final override def $getResource( resourceId : String ) : RestMethodBodyDef = {
+	  getColAndResId(resourceId) match {
+	    case (vl : Tuple2[String, String]) if vl._2=="/" => $list(vl._1)
+	    case (vl : Tuple2[String, String]) => $getResource(vl._1, vl._2)
+	    case _ => null
+	  }
+	}
+	
+	def $list(collectionId : String) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method list all collections is not implemented!")
+	}
+	
+	def $getResource( collectionId : String, resourceId : String ) : RestMethodBodyDef = restMethod as {
+	  httpErrorResult(501, "Method get resource is not implemented")
+	}
+
 }
