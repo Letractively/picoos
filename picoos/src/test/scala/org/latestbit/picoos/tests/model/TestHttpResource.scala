@@ -100,3 +100,32 @@ class TestCanonicalRestful extends HttpCanonicalResource("/cres") {
   }
   
 }
+
+
+class TestCanonicalCollectionRestful extends HttpCanonicalCollectionResource("/ccres") {
+  
+  def ttt = restMethod as { req : HttpResourceRequest  =>
+    httpTextResult("Hello from Picoos! " + req.servicePath )
+  }
+  
+  override def $list = restMethod as{
+    httpJsonResult(TestJson("Test") :: Nil)    
+  }	
+
+  override def $newResource(collectionId :String) = restMethod as {
+    httpTextResult("NewResult")
+  }
+
+  override def $getResource( collectionId : String, resourceId : String) = restMethod as {
+    httpTextResult("Result")
+  } 
+
+  override def $replaceResource( collectionId : String, resourceId : String) = restMethod as {
+    httpTextResult("UpdateResult")
+  }	
+
+  override def $deleteResource( collectionId : String, resourceId : String) = restMethod as {
+    httpTextResult("Result")
+  }
+  
+}

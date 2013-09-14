@@ -155,11 +155,15 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 		    }
 		    
 		    canonicalMethodBody match {
-		      case Some(handler : RestMethodBodyDef) => HttpResourceExecutor(this, req.servicePath, canonicalMethodBody).execute(req, resp)
+		      case Some(handler : RestMethodBodyDef) => executeCanonicalMethod(handler, req, resp)
 		      case _ => httpErrorResult(404, "Method is not supported for canonical RESTful service!")
 		    }
 		  }
 	   }
+	}
+	
+	protected def executeCanonicalMethod(handler : RestMethodBodyDef, req: HttpResourceRequest, resp: HttpResourceResponse) = {
+	  HttpResourceExecutor(this, req.servicePath, Some(handler)).execute(req, resp)
 	}
 	
 	def $list : RestMethodBodyDef = restMethod as {

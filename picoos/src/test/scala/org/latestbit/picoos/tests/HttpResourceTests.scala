@@ -69,5 +69,18 @@ class HttpResourceTests extends FeatureSpec {
 	  }
   	}
   	
+  	feature("Common HttpCanonicalResource Functionality") {
+  	  val httpCanResource = new TestCanonicalRestful()
+	  scenario("Execute handlers of HttpCanResource") {
+  	    assert ( httpCanResource.$newResource.execute().equals(httpOkResult) )
+	  }  	  
+	  
+  	  val httpCanColResource = new TestCanonicalCollectionRestful()
+	  scenario("Execute handlers of HttpCanColResource") {
+  	    assert( httpCanColResource.$newResource("ss").execute().equals(httpTextResult("NewResult")) )
+  	    assert( httpCanColResource.$replaceResource("ss").execute().equals(httpTextResult("NewResult")) )
+  	    assert( httpCanColResource.$replaceResource("ss/dd").execute().equals(httpTextResult("UpdateResult")) )
+	  }
+  	}
   	
 }
