@@ -24,9 +24,7 @@ import javax.crypto.KeyGenerator
 
 case class SessionParams(userId : String, authParams : String, timestamp : Long)
 
-class SessionManager {
-  
-	val algorithm = "HmacSHA1"
+class SessionManager(val algorithm : String = "HmacSHA1") { 	
 	  
 	def createSessionKey( key : String, userId : String, authParams : String, timestamp : Long ) : String = {
 	  createSessionKey(Hex.decodeHex(key.toCharArray()), userId, authParams, timestamp)

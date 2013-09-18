@@ -62,6 +62,26 @@ class TestsSessionManager extends FeatureSpec {
 	    println(invalidSessionKey)
 	    val sessionParams2 = sessionManager.decodeSessionParams(key, invalidSessionKey)
 	    assert( sessionParams2 == null)
+	  }	  
+	}
+	
+	feature("Check session manager for non-default algorithm" ) {
+	  val sessionManager = new SessionManager("HmacMD5")
+	  scenario("Check session security") {
+	    val key = sessionManager.generateKey()
+	    val keyAsStr = sessionManager.keyToString(key)
+	    println(keyAsStr)
+
+	    val userId = "TestUser"
+	    val authType = ""
+	    val time = 0
+	    
+	    val sessionKey = sessionManager.createSessionKey( key, userId, authType, time )
+	    println(sessionKey)
+	    val sessionParams = sessionManager.decodeSessionParams(key, sessionKey)
+	    assert(sessionParams.userId.equals(userId))
+	    assert(sessionParams.authParams.equals(authType))
+	    assert(sessionParams.timestamp == time)
 	  }
 	}
 }
