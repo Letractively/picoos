@@ -206,7 +206,10 @@ abstract class HttpCanonicalCollectionResource(resourcePath : String, extMethods
 	private def getColAndResId(resourceId : String) : Tuple2[String,String] = {
 	  val idxRes = resourceId.indexOf("/")
 	  if(idxRes != -1) {
-	    Tuple2(resourceId.substring(0, idxRes),resourceId.substring(idxRes+1))
+	    Tuple2(resourceId.substring(0, idxRes),resourceId.substring(idxRes+1) match {
+	      case (vl : String) if(vl!=null && vl.trim().length()>0) => vl
+	      case _ => "/"
+	    })
 	  }
 	  else {
 	    Tuple2(resourceId, "/")
