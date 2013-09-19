@@ -48,8 +48,7 @@ class SessionManager(val algorithm : String = "HmacSHA1") {
 	  createSessionKey(key, formatSessionParams(userId, authParams, timestamp))  
 	}
 	
-	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp
-			
+	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp			
 	
 	def decodeSessionParams(key : String, sessionKey : String) : SessionParams = {
 	  decodeSessionParams(Hex.decodeHex(key.toCharArray()),sessionKey)
@@ -60,6 +59,16 @@ class SessionManager(val algorithm : String = "HmacSHA1") {
 	  val checkSessionValidity = createSessionKey(key, decodedParams.userId, decodedParams.authParams, decodedParams.timestamp)
 	  if(checkSessionValidity.equals(sessionKey)) {
 	    decodedParams
+	  }
+	  else
+	    null
+	}
+	
+	def decodeSessionValue(key : Array[Byte], sessionValue : String) : String = {
+	  val decodedStr = sessionValue.split(":")
+	  val checkSessionValidity = createSessionKey(key, decodedStr(0))
+	  if(checkSessionValidity.equals(sessionValue)) {
+	    decodedStr(0)
 	  }
 	  else
 	    null
