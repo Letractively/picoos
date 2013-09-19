@@ -29,15 +29,19 @@ class SessionManager(val algorithm : String = "HmacSHA1") {
 	def createSessionKey( key : String, userId : String, authParams : String, timestamp : Long ) : String = {
 	  createSessionKey(Hex.decodeHex(key.toCharArray()), userId, authParams, timestamp)
 	}
-	  
-	def createSessionKey( key : Array[Byte], userId : String, authParams : String, timestamp : Long ) : String = {
+	
+	def createSessionKey( key : Array[Byte], sessionValue : String ) : String = {
 	   
 	  val keySpec = new SecretKeySpec(
         key, algorithm 
       )
 	  val encrypt = Mac.getInstance(algorithm)
 	  encrypt.init(keySpec)
-	  formatSessionParams(userId, authParams, timestamp)+":"+Hex.encodeHexString(encrypt.doFinal( (userId+":"+authParams+":"+timestamp.toString).getBytes() ))	  
+	  sessionValue+":"+Hex.encodeHexString(encrypt.doFinal( sessionValue.getBytes("UTF-8") ))	  
+	}
+	  
+	def createSessionKey( key : Array[Byte], userId : String, authParams : String, timestamp : Long ) : String = {	   
+	  createSessionKey(key, formatSessionParams(userId, authParams, timestamp))  
 	}
 	
 	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp
