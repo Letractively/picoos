@@ -64,6 +64,10 @@ class SessionManager(val algorithm : String = "HmacSHA1") {
 	    null
 	}
 	
+	def decodeSessionValue(key : String, sessionValue : String) : String = {
+	  decodeSessionValue(Hex.decodeHex(key.toCharArray()),sessionValue)
+	}
+	
 	def decodeSessionValue(key : Array[Byte], sessionValue : String) : String = {
 	  val decodedStr = sessionValue.split(":")
 	  val checkSessionValidity = createSessionKey(key, decodedStr(0))
