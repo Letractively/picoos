@@ -29,7 +29,7 @@ class RestClient(
 		  connection.connect()
 		  
 		  RestClientResult[String](
-		      scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
+		      scala.io.Source.fromInputStream(connection.getInputStream(), encoding).getLines().mkString("\n"),
 		      connection.getResponseCode(),
 		      connection.getResponseMessage()
 		  )
@@ -102,7 +102,7 @@ class RestClient(
 	      output.close      
 	
 	      val result = RestClientResult(
-	          scala.io.Source.fromInputStream(connection.getInputStream()).getLines().mkString("\n"),
+	          scala.io.Source.fromInputStream(connection.getInputStream(), encoding).getLines().mkString("\n"),
 	          connection.getResponseCode(),
 	          connection.getResponseMessage()
 	      )
