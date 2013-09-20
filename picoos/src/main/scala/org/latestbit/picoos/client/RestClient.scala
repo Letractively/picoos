@@ -20,11 +20,12 @@ class RestClient(
 	
     private final val log : Logger  = Logger.getLogger(classOf[RestClient].getName())
   
-	def httpGet(url: String) : RestClientResult[String] = {
+	def httpGet(url: String, headers : Map[String,String] = Map()) : RestClientResult[String] = {
 	  PerfUtils.meausureTime {	    	
 		  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
 		  connection.setRequestProperty("User-Agent", userAgent)
 		  connection.setConnectTimeout(connectionTimeoutMs)
+		  setupHeaders(connection, headers)
 		  connection.connect()
 		  
 		  RestClientResult[String](
@@ -35,8 +36,8 @@ class RestClient(
 	  }(time => log.logp(Level.FINE, classOf[RestClient].getName(), "httpGet", s"The request to $url has been processed within $time ms."))
 	}
 	
-	def httpGetJSon[T : Manifest](url: String) : RestClientResult[T] = {
-	  val strResult = httpGet(url)
+	def httpGetJSon[T : Manifest](url: String, headers : Map[String,String] = Map()) : RestClientResult[T] = {
+	  val strResult = httpGet(url, headers)
 	  RestClientResult[T](
 			  JSonSerializer.deserialize[T](strResult.body),
 			  strResult.httpResponseCode,
@@ -44,12 +45,12 @@ class RestClient(
 	  )			  
 	}
 	
-	def httpPost(url: String, data: Map[String, String]) : RestClientResult[String] = {
-	  httpExchangeData(url, "POST", HttpFormatter.encodeParams(data))
+	def httpPost(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[String] = {
+	  httpExchangeData(url, "POST", HttpFormatter.encodeParams(data), headers)
 	}
 	
-	def httpPostAndGetJSon[T : Manifest](url: String, data: Map[String, String]) : RestClientResult[T] = {
-	  val strResult = httpPost(url, data)
+	def httpPostAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map() ) : RestClientResult[T] = {
+	  val strResult = httpPost(url, data, headers)
 	  RestClientResult[T](
 	      JSonSerializer.deserialize[T](strResult.body),
 	      strResult.httpResponseCode,
@@ -57,8 +58,8 @@ class RestClient(
 	  )
 	}
 	
-	def httpPostAndGetData(url: String, data: Map[String, String]) : RestClientResult[Map[String, String]] = {
-	  val strResult = httpPost(url, data)
+	def httpPostAndGetData(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[Map[String, String]] = {
+	  val strResult = httpPost(url, data, headers)
 	  RestClientResult[Map[String, String]](
 	      HttpFormatter.decodeParams(strResult.body),
 	      strResult.httpResponseCode,
@@ -66,12 +67,12 @@ class RestClient(
 	  )
 	}
 	
-	def httpPut(url: String, data: Map[String, String]) : RestClientResult[String] = {
-	  httpExchangeData(url, "PUT", HttpFormatter.encodeParams(data))
+	def httpPut(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[String] = {
+	  httpExchangeData(url, "PUT", HttpFormatter.encodeParams(data), headers)
 	}
 	
-	def httpPutAndGetJSon[T : Manifest](url: String, data: Map[String, String]) : RestClientResult[T] = {
-	  val strResult = httpPut(url, data)
+	def httpPutAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[T] = {
+	  val strResult = httpPut(url, data, headers)
 	  RestClientResult[T](
 	      JSonSerializer.deserialize[T](strResult.body),
 	      strResult.httpResponseCode,
@@ -79,13 +80,20 @@ class RestClient(
 	  )
 	}
 	
-	def httpExchangeData(url : String, httpMethod : String, inputData : String) : RestClientResult[String] = {
+	protected def setupHeaders(connection : HttpURLConnection, headers : Map[String,String]) = {
+	  headers.foreach(item => {
+	    connection.setRequestProperty(item._1, item._2)
+	  })
+	}
+	
+	def httpExchangeData(url : String, httpMethod : String, inputData : String, headers : Map[String,String] = Map() ) : RestClientResult[String] = {
 	  PerfUtils.meausureTime {
 		  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
 		  connection.setRequestProperty("User-Agent", userAgent)
 		  connection.setConnectTimeout(connectionTimeoutMs)
 		  connection.setDoOutput(true)
 		  connection.setRequestMethod(httpMethod)
+		  setupHeaders(connection, headers)
 		  connection.connect()
 		  
 		  val output = new OutputStreamWriter(connection.getOutputStream())
