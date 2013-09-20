@@ -23,9 +23,12 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.`type`.TypeReference
 import java.io.StringWriter
 import java.lang.reflect._
+import java.util.logging.Logger
 
 
 object JSonSerializer {
+    private final val log : Logger  = Logger.getLogger(JSonSerializer.getClass().getName())
+    
 	val mapper = new ObjectMapper()
 	mapper.registerModule(DefaultScalaModule)
 	
@@ -35,7 +38,17 @@ object JSonSerializer {
 		writer.toString
 	}
 	
-	def deserialize[T: Manifest](value: String) : T =  mapper.readValue(value, typeReference[T])
+	def deserialize[T: Manifest](value: String) : T =  {
+	  try {
+		  mapper.readValue(value, typeReference[T])
+	  }
+	  catch{
+	    case (ex:com.fasterxml.jackson.core.JsonParseException) => {
+	      log.warning(s"JSon deserialize error $ex")
+	      null.asInstanceOf[T]
+	    }
+	  }
+	}
 	
 	private [this] def typeReference[T: Manifest] = new TypeReference[T] {
 	  override def getType = typeFromManifest(manifest[T])
