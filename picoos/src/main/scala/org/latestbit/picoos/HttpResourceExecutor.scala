@@ -45,6 +45,8 @@ case class HttpResourceExecutor(resource : HttpResource, path : String, restMeth
 			    	if(resource.corsAllowHeaders.isDefined)
 			    		resp.http.setHeader("Access-Control-Allow-Headers", resource.corsAllowHeaders.get)		      
 			    }
+			    if(resource.cachingOptions.isDefined)
+			      resource.cachingOptions.get.proceedOptions(resp)
 			    
 			    result.proceedHttpResponse( resp )
 			}
