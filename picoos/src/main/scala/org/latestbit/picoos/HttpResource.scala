@@ -36,6 +36,7 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	var corsMode : Boolean = false
 	var corsAllowOrigin : Option[String] = Some("*")
 	var corsAllowHeaders : Option[String] = Some("Origin, X-Requested-With, Content-Type, Accept")
+	var cachingOptions : Option[CachingOptions] = None
 	
 	protected def proceedResourceCustomHandlers( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Boolean = {
 	  val processedHandlers = customHandlers.takeWhile( item => item.proceedRequest(req, resp, this ))	  
@@ -91,6 +92,10 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	def removeCustomRequestHandler( handler : HttpResourceCustomHandler ) : HttpResource = {
 	  customHandlers = customHandlers.filterNot( _ == handler)
 	  this
+	}
+	
+	def setCachingOptions(options : Option[CachingOptions]) = {
+	  this.cachingOptions = options
 	}
 }
 

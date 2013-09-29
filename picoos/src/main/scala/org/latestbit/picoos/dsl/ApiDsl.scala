@@ -24,18 +24,22 @@ import org.latestbit.picoos.serializers._
 import scala.collection.immutable.Map
 
 
-case class CachingOptions(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true)
-
-abstract class RestMethodResult(val cacheFlags : CachingOptions) {
-  def proceedHttpResponse(resp : HttpResourceResponse) = {
-    if(cacheFlags.noCacheMode) {
+case class CachingOptions(val noCacheMode : Boolean = false, val privateCacheMode : Boolean = true) {
+  def proceedOptions(resp : HttpResourceResponse) = {
+    if(noCacheMode) {
       resp.http.setHeader("Cache-Control",  "no-cache, no-store, must-revalidate")
       resp.http.setHeader("Pragma",  "no-cache")
       resp.http.setDateHeader("Expires",  0)
     }
-    if(cacheFlags.privateCacheMode) {
+    if(privateCacheMode) {
       resp.http.setHeader("Cache-Control", "private")
     }
+  }
+}
+
+abstract class RestMethodResult(val cacheFlags : CachingOptions) {
+  def proceedHttpResponse(resp : HttpResourceResponse) = {
+    cacheFlags.proceedOptions(resp)
   }
 }
 
