@@ -96,6 +96,7 @@ class HttpResource(val resourcePath : String) extends ApiDsl {
 	
 	def setCachingOptions(options : Option[CachingOptions]) = {
 	  this.cachingOptions = options
+	  this
 	}
 }
 
