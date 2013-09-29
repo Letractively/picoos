@@ -2,7 +2,7 @@ import sbt.Package.ManifestAttributes
 
 name := "picosa"
 
-version := "0.12"
+version := "0.13"
 
 organization := "www.latestbit.com"
 
