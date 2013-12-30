@@ -10,7 +10,9 @@ homepage := Some(url("http://www.latestbit.com"))
 
 licenses := Seq(("Apache License v2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")))
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
+
+sbtVersion := "0.13.1"
 
 exportJars := true
 
