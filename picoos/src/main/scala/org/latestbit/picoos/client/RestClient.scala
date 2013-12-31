@@ -38,11 +38,16 @@ class RestClient(
 	
 	def httpGetJSon[T : Manifest](url: String, headers : Map[String,String] = Map()) : RestClientResult[T] = {
 	  val strResult = httpGet(url, headers)
-	  RestClientResult[T](
-			  JSonSerializer.deserialize[T](strResult.body),
-			  strResult.httpResponseCode,
-			  strResult.httpResponseMessage
-	  )			  
+	  if(strResult.httpResponseCode<400) {
+		  RestClientResult[T](
+				  JSonSerializer.deserialize[T](strResult.body),
+				  strResult.httpResponseCode,
+				  strResult.httpResponseMessage
+		  )			  
+	  }
+	  else {
+	    RestClientResult[T](null.asInstanceOf[T], strResult.httpResponseCode,strResult.httpResponseMessage)	        
+	  }	    
 	}
 	
 	def httpPost(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[String] = {
@@ -51,11 +56,16 @@ class RestClient(
 	
 	def httpPostAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map() ) : RestClientResult[T] = {
 	  val strResult = httpPost(url, data, headers)
-	  RestClientResult[T](
-	      JSonSerializer.deserialize[T](strResult.body),
-	      strResult.httpResponseCode,
-	      strResult.httpResponseMessage
-	  )
+	  if(strResult.httpResponseCode<400) {
+		  RestClientResult[T](
+		      JSonSerializer.deserialize[T](strResult.body),
+		      strResult.httpResponseCode,
+		      strResult.httpResponseMessage
+		  )
+	  }
+	  else {
+	    RestClientResult[T](null.asInstanceOf[T], strResult.httpResponseCode,strResult.httpResponseMessage)	        
+	  }	 
 	}
 	
 	def httpPostAndGetData(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[Map[String, String]] = {
@@ -73,11 +83,16 @@ class RestClient(
 	
 	def httpPutAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[T] = {
 	  val strResult = httpPut(url, data, headers)
-	  RestClientResult[T](
-	      JSonSerializer.deserialize[T](strResult.body),
-	      strResult.httpResponseCode,
-	      strResult.httpResponseMessage
-	  )
+	  if(strResult.httpResponseCode<400) {
+		  RestClientResult[T](
+		      JSonSerializer.deserialize[T](strResult.body),
+		      strResult.httpResponseCode,
+		      strResult.httpResponseMessage
+		  )
+	  }
+	  else {
+	    RestClientResult[T](null.asInstanceOf[T], strResult.httpResponseCode,strResult.httpResponseMessage)	        
+	  }
 	}
 	
 	protected def setupHeaders(connection : HttpURLConnection, headers : Map[String,String]) = {
