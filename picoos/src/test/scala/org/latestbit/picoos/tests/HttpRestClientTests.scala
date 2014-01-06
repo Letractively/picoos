@@ -14,6 +14,11 @@ case class UserAgentJson(`user-agent` : String)
 @JsonIgnoreProperties(ignoreUnknown = true)
 case class IPInfo2(origin : String, unexistsQQQQ : String)
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+class IPInfo3(var origin: String = null)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class IPInfo4 { var origin: String  = null }
 
 class HttpRestClientTests extends FeatureSpec {
   feature("RESTClient functionality tests") {
@@ -31,7 +36,7 @@ class HttpRestClientTests extends FeatureSpec {
           )
       ).body
       assert ( getInfo!=null )
-      assert ( getInfo.get("args").get.asInstanceOf[collection.mutable.Map[String, Any]].size == 2)
+      assert ( getInfo.get("args").get.asInstanceOf[Map[String, Any]].size == 2)
       
       val ipInfo2 : IPInfo2 = restClient.httpGetJSon[IPInfo2](
           HttpFormatter.formatUrlWithParams(
@@ -41,6 +46,24 @@ class HttpRestClientTests extends FeatureSpec {
       ).body
       assert ( ipInfo2!=null )
       assert ( ipInfo2.origin.length() > 0)
+      
+      /*val ipInfo3 : IPInfo3 = restClient.httpGetJSon[IPInfo3](
+          HttpFormatter.formatUrlWithParams(
+              "http://httpbin.org/get",
+              Map("fdgg" -> "ggg", "sss"-> "hhh")
+          )
+      ).body
+      assert ( ipInfo3!=null )
+      assert ( ipInfo3.origin.length() > 0)*/
+      
+      val ipInfo4 : IPInfo4 = restClient.httpGetJSon[IPInfo4](
+          HttpFormatter.formatUrlWithParams(
+              "http://httpbin.org/get",
+              Map("fdgg" -> "ggg", "sss"-> "hhh")
+          )
+      ).body
+      assert ( ipInfo4!=null )
+      assert ( ipInfo4.origin.length() > 0)
       
       val userAgent : UserAgentJson = restClient.httpGetJSon[UserAgentJson]("http://httpbin.org/user-agent").body
       assert ( userAgent.`user-agent`!=null )
@@ -54,7 +77,7 @@ class HttpRestClientTests extends FeatureSpec {
       val postResJSon = restClient.httpPostAndGetJSon[Map[String, Any]]("http://httpbin.org/post", Map("test"->"value")).body
       assert (postResJSon!=null)
       assert (postResJSon.get("headers").isDefined)
-      assert (postResJSon.get("headers").get.asInstanceOf[collection.mutable.Map[String,Any]].get("User-Agent") == Some("TestPicoosClient"))
+      assert (postResJSon.get("headers").get.asInstanceOf[Map[String,Any]].get("User-Agent") == Some("TestPicoosClient"))
       
       val decodedParams = HttpFormatter.decodeParams("&test=value&test2=value2")
       assert (decodedParams.size == 2)
