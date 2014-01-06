@@ -47,8 +47,28 @@ object JSonSerializer {
 	      log.warning(s"JSon deserialize error $ex")
 	      null.asInstanceOf[T]
 	    }
+	    case (ex:com.fasterxml.jackson.databind.JsonMappingException) => {
+	      log.warning(s"JSon mapping error $ex for json: \n$value\n ")
+	      throw ex;
+	    }
 	  }
 	}
+	
+	def deserializeToObj[T](value: String, obj: T)(implicit m: scala.Predef.Manifest[T]): T = {
+	  try {
+	  	mapper.reader(m.runtimeClass.asInstanceOf[Class[T]]).withValueToUpdate(obj).readValue(value.getBytes())
+	  }
+	  catch{
+	    case (ex:com.fasterxml.jackson.core.JsonParseException) => {
+	      log.warning(s"JSon deserialize error $ex")
+	      null.asInstanceOf[T]
+	    }
+	    case (ex:com.fasterxml.jackson.databind.JsonMappingException) => {
+	      log.warning(s"JSon mapping error $ex for json: \n$value\n ")
+	      throw ex;
+	    }
+	  }
+    } 
 	
 	private [this] def typeReference[T: Manifest] = new TypeReference[T] {
 	  override def getType = typeFromManifest(manifest[T])

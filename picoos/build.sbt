@@ -21,7 +21,7 @@ resolvers ++= Seq(
 ) 
 
 libraryDependencies ++= Seq(
-	"com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3",
+	"com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.3.+",
 	"javax.servlet" % "javax.servlet-api" % "3.0.+",
 	"org.scalatest" %% "scalatest" % "1.9.+" % "test"
 )
