@@ -22,12 +22,19 @@ case class Permission(permAction : String, permObject : String)
 class PicosaPermissions(val permissions : Seq[Permission] = Seq()) {				 
   
 	def ++ (that : PicosaPermissions) : PicosaPermissions = {
-			new PicosaPermissions( permissions ++ that.permissions.filter( item => !this.hasPermission(item)) )
+		new PicosaPermissions( permissions ++ that.permissions.filter( item => !this.hasPermission(item)) )
 	}
 	
-	def hasPermissionStrForm ( perm: String ) : Boolean = hasPermission(perm.split("\\.")(0), perm.split("\\.")(1))
+	def stringToPermission( perm : String ) : Permission = {
+	  val parsedPerm = perm.split("\\.")
+	  if(parsedPerm.length == 1)
+	    parsedPerm :+ ""	  
+	  Permission(parsedPerm(0),parsedPerm(1))
+	}
 	
-	def hasPermissionsStrForm ( perms: Seq[String] ) : Boolean = hasPermissions( perms.map(perm => Permission(perm.split("\\.")(0), perm.split("\\.")(1))))
+	def hasPermissionStrForm ( perm: String ) : Boolean = hasPermission(stringToPermission(perm))
+	
+	def hasPermissionsStrForm ( perms: Seq[String] ) : Boolean = hasPermissions( perms.map(stringToPermission(_)))
 	
 	def hasPermissions ( perms: Seq[Permission] ) : Boolean = {
 	  !perms.filter(perm => hasPermission(perm)).isEmpty
