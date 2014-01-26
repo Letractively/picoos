@@ -21,6 +21,8 @@ import org.apache.commons.codec.binary.Hex
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.Mac
 import javax.crypto.KeyGenerator
+import java.net.URLEncoder
+import java.net.URLDecoder
 
 case class SessionParams(userId : String, authParams : String, timestamp : Long)
 
@@ -48,14 +50,15 @@ class SessionManager(val algorithm : String = "HmacSHA1") {
 	  createSessionKey(key, formatSessionParams(userId, authParams, timestamp))  
 	}
 	
-	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = userId+":"+authParams+":"+timestamp			
+	def formatSessionParams(userId : String, authParams : String, timestamp : Long) = 
+	  userId+":"+URLEncoder.encode(authParams, "UTF-8")+":"+timestamp			
 	
 	def decodeSessionParams(key : String, sessionKey : String) : SessionParams = {
 	  decodeSessionParams(Hex.decodeHex(key.toCharArray()),sessionKey)
 	}
 	def decodeSessionParams(key : Array[Byte], sessionKey : String) : SessionParams = {
 	  val decodedStr = sessionKey.split(":")
-	  val decodedParams = SessionParams(decodedStr(0), decodedStr(1), decodedStr(2).toLong)
+	  val decodedParams = SessionParams(decodedStr(0), URLDecoder.decode(decodedStr(1), "UTF-8"), decodedStr(2).toLong)
 	  val checkSessionValidity = createSessionKey(key, decodedParams.userId, decodedParams.authParams, decodedParams.timestamp)
 	  if(checkSessionValidity.equals(sessionKey)) {
 	    decodedParams
