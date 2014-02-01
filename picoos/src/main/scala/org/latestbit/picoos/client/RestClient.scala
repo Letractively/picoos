@@ -11,7 +11,7 @@ import java.util.logging.Level
 import org.latestbit.picoos.HttpFormatter
 
 
-case class RestClientResult[T](val body : T, httpResponseCode : Int, httpResponseMessage : String)
+case class RestClientResult[T](val body : T, httpResponseCode : Int, httpResponseMessage : String, httpErrorStream : String)
 
 class RestClient(
     val userAgent : String = "PicoosRESTClient", 
@@ -28,26 +28,33 @@ class RestClient(
 		  setupHeaders(connection, headers)
 		  connection.connect()
 		  
+		  val httpErrorStream =  if(connection.getResponseCode() >= 400) {
+		    scala.io.Source.fromInputStream(connection.getErrorStream(), encoding).getLines().mkString("\n")
+		  }
+		  else
+		    null
+		  
 		  RestClientResult[String](
 		      scala.io.Source.fromInputStream(connection.getInputStream(), encoding).getLines().mkString("\n"),
 		      connection.getResponseCode(),
-		      connection.getResponseMessage()
+		      connection.getResponseMessage(),
+		      httpErrorStream
 		  )
 	  }(time => log.logp(Level.FINE, classOf[RestClient].getName(), "httpGet", s"The request to $url has been processed within $time ms."))
 	}
 	
 	def httpGetJSon[T : Manifest](url: String, headers : Map[String,String] = Map()) : RestClientResult[T] = {
 	  val strResult = httpGet(url, headers)
-	  if(strResult.httpResponseCode<400) {
-		  RestClientResult[T](
-				  JSonSerializer.deserialize[T](strResult.body),
-				  strResult.httpResponseCode,
-				  strResult.httpResponseMessage
-		  )			  
-	  }
-	  else {
-	    RestClientResult[T](null.asInstanceOf[T], strResult.httpResponseCode,strResult.httpResponseMessage)	        
-	  }	    
+	  
+	  RestClientResult[T](
+	      (if(strResult.httpResponseCode<400)
+			  JSonSerializer.deserialize[T](strResult.body)
+	      else
+	        null.asInstanceOf[T]),
+		  strResult.httpResponseCode,
+		  strResult.httpResponseMessage,
+		  strResult.httpErrorStream
+	  )	  
 	}
 	
 	def httpPost(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[String] = {
@@ -56,24 +63,28 @@ class RestClient(
 	
 	def httpPostAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map() ) : RestClientResult[T] = {
 	  val strResult = httpPost(url, data, headers)
-	  if(strResult.httpResponseCode<400) {
-		  RestClientResult[T](
-		      JSonSerializer.deserialize[T](strResult.body),
-		      strResult.httpResponseCode,
-		      strResult.httpResponseMessage
-		  )
-	  }
-	  else {
-	    RestClientResult[T](null.asInstanceOf[T], strResult.httpResponseCode,strResult.httpResponseMessage)	        
-	  }	 
+	  
+	  RestClientResult[T](
+	      (if(strResult.httpResponseCode<400)
+	    	  JSonSerializer.deserialize[T](strResult.body)
+	      else
+	        null.asInstanceOf[T]),
+	      strResult.httpResponseCode,
+	      strResult.httpResponseMessage,
+	      strResult.httpErrorStream
+	  )	  
 	}
 	
 	def httpPostAndGetData(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[Map[String, String]] = {
 	  val strResult = httpPost(url, data, headers)
 	  RestClientResult[Map[String, String]](
-	      HttpFormatter.decodeParams(strResult.body),
+	      (if(strResult.body!=null) 
+	        HttpFormatter.decodeParams(strResult.body)
+	      else
+	        Map()),
 	      strResult.httpResponseCode,
-	      strResult.httpResponseMessage
+	      strResult.httpResponseMessage,
+	      strResult.httpErrorStream
 	  )
 	}
 	
@@ -83,16 +94,15 @@ class RestClient(
 	
 	def httpPutAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[T] = {
 	  val strResult = httpPut(url, data, headers)
-	  if(strResult.httpResponseCode<400) {
-		  RestClientResult[T](
-		      JSonSerializer.deserialize[T](strResult.body),
-		      strResult.httpResponseCode,
-		      strResult.httpResponseMessage
-		  )
-	  }
-	  else {
-	    RestClientResult[T](null.asInstanceOf[T], strResult.httpResponseCode,strResult.httpResponseMessage)	        
-	  }
+	  RestClientResult[T](
+	      (if(strResult.httpResponseCode<400)
+    	  JSonSerializer.deserialize[T](strResult.body)
+	      else
+	        null.asInstanceOf[T]),
+	      strResult.httpResponseCode,
+	      strResult.httpResponseMessage,
+	      strResult.httpErrorStream
+	  )
 	}
 	
 	protected def setupHeaders(connection : HttpURLConnection, headers : Map[String,String]) = {
@@ -114,12 +124,19 @@ class RestClient(
 		  val output = new OutputStreamWriter(connection.getOutputStream())
 	      output.write(inputData)
 	      output.flush
-	      output.close      
+	      output.close
+	      
+	      val httpErrorStream =  if(connection.getResponseCode() >= 400) {
+		    scala.io.Source.fromInputStream(connection.getErrorStream(), encoding).getLines().mkString("\n")
+		  }
+		  else
+		    null
 	
 	      val result = RestClientResult(
 	          scala.io.Source.fromInputStream(connection.getInputStream(), encoding).getLines().mkString("\n"),
 	          connection.getResponseCode(),
-	          connection.getResponseMessage()
+	          connection.getResponseMessage(),
+	          httpErrorStream
 	      )
 	      connection.disconnect()
 	      result
