@@ -54,6 +54,10 @@ object JSonSerializer {
 	  }
 	}
 	
+	def deserialize[T <: AnyRef](value: String, cls : Class[T]) : T =  {
+	  mapper.readValue(value, cls)
+	}
+	
 	def deserializeToObj[T](value: String, obj: T)(implicit m: scala.Predef.Manifest[T]): T = {
 	  try {
 	  	mapper.reader(m.runtimeClass.asInstanceOf[Class[T]]).withValueToUpdate(obj).readValue(value.getBytes())
