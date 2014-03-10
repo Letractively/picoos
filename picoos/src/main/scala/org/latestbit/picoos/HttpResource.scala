@@ -114,6 +114,14 @@ abstract class HttpProxyResource(resourcePath : String) extends HttpResource(res
 
 abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName : String = "f") extends HttpResource(resourcePath) {
 	
+	def getResourceIdForRequest(req : HttpResourceRequest) : String = {
+	  val idxResPathStr = req.servicePath.indexOf(resourcePath)
+	  req.servicePath.substring(idxResPathStr+resourcePath.length()) match {
+		      case "" | "/" => "/"
+		      case str : String if(str.startsWith("/")) => str.substring(1)
+		      case str : String => str
+	  }
+	}
 	override def proceedResourceRequest( req : HttpResourceRequest, resp : HttpResourceResponse  ) : Unit = {
 	  if(proceedResourceCustomHandlers(req,resp)) {
 	    val additionalMethodParam = req.http.getParameter(extMethodsParamName)
@@ -126,12 +134,7 @@ abstract class HttpCanonicalResource(resourcePath : String, extMethodsParamName 
 	    }
 		else {
 			// Check canonical paths
-		    val idxResPathStr = req.servicePath.indexOf(resourcePath)
-		    val resourceId = req.servicePath.substring(idxResPathStr+resourcePath.length()) match {
-		      case "" | "/" => "/"
-		      case str : String if(str.startsWith("/")) => str.substring(1)
-		      case str : String => str
-		    }
+		    val resourceId = getResourceIdForRequest(req)
 		    
 		    val canonicalMethodBody : Option[RestMethodBodyDef] = req.httpMethod match {		      
 		      case HttpMethod.GET =>
