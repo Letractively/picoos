@@ -59,7 +59,7 @@ case class httpTextResult(textResult : String, charset: String = "UTF-8", overri
 } 
 case class httpJsonResult[T<:AnyRef](jsonObj : T, charset: String = "UTF-8", override val cacheFlags : CachingOptions= CachingOptions()) extends RestMethodResult(cacheFlags) {
   //lazy val textResult = Json.generate(jsonObj)
-  lazy val textResult = JSonSerializer.serialize(jsonObj)
+  val textResult = JSonSerializer.serialize(jsonObj)
 
   override def proceedHttpResponse(resp : HttpResourceResponse) = {
 	  super.proceedHttpResponse(resp)
@@ -98,7 +98,9 @@ class RestMethodBodyDef {
   
   abstract class RestMethodBodyHandler
   class RestMethodBodyHandlerNoParams(inBody : => RestMethodResult) extends RestMethodBodyHandler {
-	  lazy val handler = inBody
+	  def handler = {
+	    inBody
+	  } 
   }	
   class RestMethodBodyHandlerHttpRequest(val handler : (HttpResourceRequest)=> RestMethodResult) extends RestMethodBodyHandler
   class RestMethodBodyHandlerHttpRequestAndResponse(val handler : (HttpResourceRequest, HttpResourceResponse)=> RestMethodResult) extends RestMethodBodyHandler
