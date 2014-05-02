@@ -24,7 +24,7 @@ import org.latestbit.picoos.tests.model._
 
 
 class HttpResourceTests extends FeatureSpec {
-
+    
   	feature("API tests" ) {
   	  val testDsl = new TestDsl()
   	  

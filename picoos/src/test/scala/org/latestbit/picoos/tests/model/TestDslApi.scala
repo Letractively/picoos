@@ -9,7 +9,7 @@ class TestDsl extends ApiDsl {
     httpNoResult
   }
   
-  def test1 = restMethod as {
+  def test1 = restMethod as { 
     httpNoResult
   }
   
