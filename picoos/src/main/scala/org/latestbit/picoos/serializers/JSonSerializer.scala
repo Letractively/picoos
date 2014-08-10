@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.`type`.TypeReference
 import java.io.StringWriter
 import java.lang.reflect._
 import java.util.logging.Logger
+import java.io.InputStream
 
 
 object JSonSerializer {
@@ -49,6 +50,23 @@ object JSonSerializer {
 	    }
 	    case (ex:com.fasterxml.jackson.databind.JsonMappingException) => {
 	      log.warning(s"JSon mapping error $ex for json: \n$value\n ")
+	      throw ex;
+	    }
+	  }
+	}
+
+
+	def deserialize[T: Manifest](stream: InputStream) : T =  {
+	  try {
+		  mapper.readValue(stream, typeReference[T])
+	  }
+	  catch{
+	    case (ex:com.fasterxml.jackson.core.JsonParseException) => {
+	      log.warning(s"JSon deserialize error $ex")
+	      null.asInstanceOf[T]
+	    }
+	    case (ex:com.fasterxml.jackson.databind.JsonMappingException) => {
+	      log.warning(s"JSon mapping error $ex for json stream\n ")
 	      throw ex;
 	    }
 	  }
