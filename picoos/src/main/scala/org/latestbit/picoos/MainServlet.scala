@@ -118,7 +118,7 @@ class MainServlet extends HttpServlet {
 		            getServletContext()
 		    )
 		    
-		    PerfUtils.meausureTime {
+		    PerfUtils.measureTime {
 	    		val resourceResp = HttpResourceResponse(resp)
 	    		registry.proceedRequest( resourceReq, resourceResp )
 	    	}(time => log.logp(Level.FINE, classOf[MainServlet].getName(), "proceedRequest", s"The request to $servicePath (Method: $httpMethod) has been processed within $time ms."))
