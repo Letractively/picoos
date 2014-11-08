@@ -21,7 +21,7 @@ class RestClient(
     private final val log : Logger  = Logger.getLogger(classOf[RestClient].getName())
   
 	def httpGet(url: String, headers : Map[String,String] = Map()) : RestClientResult[String] = {
-	  PerfUtils.meausureTime {	    	
+	  PerfUtils.measureTime {	    	
 		  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
 		  connection.setRequestProperty("User-Agent", userAgent)
 		  connection.setConnectTimeout(connectionTimeoutMs)
@@ -112,7 +112,7 @@ class RestClient(
 	}
 	
 	def httpExchangeData(url : String, httpMethod : String, inputData : String, headers : Map[String,String] = Map() ) : RestClientResult[String] = {
-	  PerfUtils.meausureTime {
+	  PerfUtils.measureTime {
 		  val connection : HttpURLConnection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
 		  connection.setRequestProperty("User-Agent", userAgent)
 		  connection.setConnectTimeout(connectionTimeoutMs)
