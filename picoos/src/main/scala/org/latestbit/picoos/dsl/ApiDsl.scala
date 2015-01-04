@@ -29,7 +29,7 @@ case class CachingOptions(val noCacheMode : Boolean = false, val privateCacheMod
     if(noCacheMode) {
       resp.http.setHeader("Cache-Control",  "no-cache, no-store, must-revalidate")
       resp.http.setHeader("Pragma",  "no-cache")
-      resp.http.setDateHeader("Expires",  0)
+      resp.http.setDateHeader("Expires",  -1)
     }
     if(privateCacheMode) {
       resp.http.setHeader("Cache-Control", "private")
