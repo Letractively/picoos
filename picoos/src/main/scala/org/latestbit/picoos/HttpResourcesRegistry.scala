@@ -17,7 +17,9 @@
 
 package org.latestbit.picoos
 
-import scala.collection.mutable.{Map, HashMap, SynchronizedMap}
+import java.util.concurrent.ConcurrentHashMap
+import scala.collection._
+import scala.collection.convert.decorateAsScala._
 import org.latestbit.picoos.HttpMethod._
 import java.util.logging.Logger
 import java.util.logging.Level
@@ -39,8 +41,7 @@ class StdHttpResourcesRegistry(val registryName : String) extends HttpResourcesR
 	val KEY_DELIMETER="~"
 	private final val log : Logger  = Logger.getLogger(classOf[StdHttpResourcesRegistry].getName())
 	  
-	val handlersRegistry = new HashMap[String, 
-	  (HttpResourceRequest, HttpResourceResponse) =>Unit] with SynchronizedMap[String, (HttpResourceRequest, HttpResourceResponse) =>Unit]		
+	val handlersRegistry = new ConcurrentHashMap[String, (HttpResourceRequest, HttpResourceResponse) =>Unit]().asScala 		
 	
 	override def registerHandler(
 	    path : String, 
