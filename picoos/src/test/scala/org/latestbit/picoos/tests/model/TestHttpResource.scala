@@ -19,113 +19,110 @@ package org.latestbit.picoos.tests.model
 import org.latestbit.picoos._
 import org.latestbit.picoos.dsl._
 
-case class TestJson(value : String)
-class TestHttpResource extends HttpResource("/resource1") {
+case class TestJson( value : String )
+class TestHttpResource extends HttpResource( "/resource1" ) {
 
-  def getUsers = restMethod as { 
-    httpOkResult
-  }
-  
-  def getUsers2 = restMethod(path = "/getUsers2Mapped") as { 
-    httpTextResult("Hello!")
-  }
-  
-  def getUsers3 = restMethod as { req : HttpResourceRequest => 
-    httpJsonResult(TestJson("Test"))
-  }
+	def getUsers = restMethod as {
+		httpOkResult
+	}
 
-  def getUsers4 = restMethod("/getUsers4", HttpMethod.GET) as { req : HttpResourceRequest => 
-    httpXmlResult(
-        <test>xml result</test>
-    )
-  }
-  
-  def getUsers5= restMethod(httpMethod = HttpMethod.GET) as { req : HttpResourceRequest => 
-    httpOkResult
-  }
-  
-  def getUsers6= restMethod(httpMethod = HttpMethod.GET) as { (req : HttpResourceRequest, resp : HttpResourceResponse) => 
-    httpOkResult
-  }    
+	def getUsers2 = restMethod( path = "/getUsers2Mapped" ) as {
+		httpTextResult( "Hello!" )
+	}
 
-  def getUsers7= restMethod(httpMethod = HttpMethod.GET) as { (req : HttpResourceRequest, resp : HttpResourceResponse) => 
-    httpOkResult(CachingOptions(false, false))
-  }    
-  
-  def getUsersSecure4 = requireAuth restMethod("/getUsersSecure4", HttpMethod.GET) as { req : HttpResourceRequest => 
-    httpXmlResult(
-        <test>xml result</test>
-    )
-  }
-  
+	def getUsers3 = restMethod as { req : HttpResourceRequest =>
+		httpJsonResult( TestJson( "Test" ) )
+	}
+
+	def getUsers4 = restMethod( "/getUsers4", HttpMethod.GET ) as { req : HttpResourceRequest =>
+		httpXmlResult(
+			<test>xml result</test> )
+	}
+
+	def getUsers5 = restMethod( httpMethod = HttpMethod.GET ) as { req : HttpResourceRequest =>
+		httpOkResult
+	}
+
+	def getUsers6 = restMethod( httpMethod = HttpMethod.GET ) as { ( req : HttpResourceRequest, resp : HttpResourceResponse ) =>
+		httpOkResult
+	}
+
+	def getUsers7 = restMethod( httpMethod = HttpMethod.GET ) as { ( req : HttpResourceRequest, resp : HttpResourceResponse ) =>
+		httpOkResult( CachingOptions( false, false ) )
+	}
+
+	def getUsersSecure4 = requireAuth restMethod ( "/getUsersSecure4", HttpMethod.GET ) as { req : HttpResourceRequest =>
+		httpXmlResult(
+			<test>xml result</test> )
+	}
+
 }
 
-class TestProxyResources extends HttpProxyResource("/web") {
-  
-  def ttt = restMethod as { req : HttpResourceRequest  =>
-    httpTextResult("Hello from Picoos! " + req.servicePath )
-  }
-  
-  override def dispatch(req : HttpResourceRequest, resp : HttpResourceResponse ) : Boolean = {        
-    val dispatchPath = "/html"+ req.servicePath.replace( this.resourcePath, "") +".html"
-    req.http.getRequestDispatcher(dispatchPath).forward(req.http, resp.http)
-    true
-  }
+class TestProxyResources extends HttpProxyResource( "/web" ) {
+
+	def ttt = restMethod as { req : HttpResourceRequest =>
+		httpTextResult( "Hello from Picoos! " + req.servicePath )
+	}
+
+	override def dispatch( req : HttpResourceRequest, resp : HttpResourceResponse ) : Boolean = {
+		val dispatchPath = "/html" + req.servicePath.replace( this.resourcePath, "" ) + ".html"
+		req.http.getRequestDispatcher( dispatchPath ).forward( req.http, resp.http )
+		true
+	}
 }
 
-class TestCanonicalRestful extends HttpCanonicalResource("/cres") {
-  
-  def ttt = restMethod as { req : HttpResourceRequest  =>
-    httpTextResult("Hello from Picoos! " + req.servicePath )
-  }
-  
-  override def $list = restMethod as{
-    httpJsonResult(TestJson("Test") :: Nil)    
-  }	
+class TestCanonicalRestful extends HttpCanonicalResource( "/cres" ) {
 
-  override def $newResource = restMethod as {
-    httpOkResult
-  }
+	def ttt = restMethod as { req : HttpResourceRequest =>
+		httpTextResult( "Hello from Picoos! " + req.servicePath )
+	}
 
-  override def $getResource( resourceId : String) = restMethod as {
-    httpJsonResult(TestJson("Test"))
-  } 
+	override def $list = restMethod as {
+		httpJsonResult( TestJson( "Test" ) :: Nil )
+	}
 
-  override def $replaceResource( resourceId : String) = restMethod as {
-    httpOkResult
-  }	
+	override def $newResource = restMethod as {
+		httpOkResult
+	}
 
-  override def $deleteResource( resourceId : String) = restMethod as {
-    httpOkResult
-  }
-  
+	override def $getResource( resourceId : String ) = restMethod as {
+		httpJsonResult( TestJson( "Test" ) )
+	}
+
+	override def $replaceResource( resourceId : String ) = restMethod as {
+		httpOkResult
+	}
+
+	override def $deleteResource( resourceId : String ) = restMethod as {
+		httpOkResult
+	}
+
 }
 
+class TestCanonicalCollectionRestful extends HttpCanonicalCollectionResource( "/ccres" ) {
 
-class TestCanonicalCollectionRestful extends HttpCanonicalCollectionResource("/ccres") {
-  
-  def ttt = restMethod as { req : HttpResourceRequest  =>
-    httpTextResult("Hello from Picoos! " + req.servicePath )
-  }
-  
-  override def $list = restMethod as{
-    httpJsonResult(TestJson("Test") :: Nil)    
-  }	
+	def ttt = restMethod as { req : HttpResourceRequest =>
+		httpTextResult( "Hello from Picoos! " + req.servicePath )
+	}
 
-  override def $newResource(collectionId :String) = restMethod as {
-    httpTextResult("NewResult")
-  }
+	override def $list = restMethod as {
+		httpJsonResult( TestJson( "Test" ) :: Nil )
+	}
 
-  override def $getResource( collectionId : String, resourceId : String) = restMethod as {
-    httpTextResult("Result")
-  } 
+	override def $newResource( collectionId : String ) = restMethod as {
+		httpTextResult( "NewResult" )
+	}
 
-  override def $replaceResource( collectionId : String, resourceId : String) = restMethod as {
-    httpTextResult("UpdateResult")
-  }	
+	override def $getResource( collectionId : String, resourceId : String ) = restMethod as {
+		httpTextResult( "Result" )
+	}
 
-  override def $deleteResource( collectionId : String, resourceId : String) = restMethod as {
-    httpTextResult("Result")
-  }
-  
+	override def $replaceResource( collectionId : String, resourceId : String ) = restMethod as {
+		httpTextResult( "UpdateResult" )
+	}
+
+	override def $deleteResource( collectionId : String, resourceId : String ) = restMethod as {
+		httpTextResult( "Result" )
+	}
+
 }
