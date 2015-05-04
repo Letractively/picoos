@@ -10,7 +10,7 @@ object HttpFormatter {
   	  params.split("&").toList.filter(_.length() >0).map { item =>
   	    val param = item.split("=")
   	    if(param.size > 1)
-  	    	(param(0) -> param(1))
+  	    	(param(0) -> urlDecode(param(1)))
   	    else
   	    	(param(0) -> "")
   	  }.toMap
