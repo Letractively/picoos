@@ -60,6 +60,10 @@ class RestClient(
 	def httpPost(url: String, data: Map[String, String], headers : Map[String,String] = Map()) : RestClientResult[String] = {
 	  httpExchangeData(url, "POST", HttpFormatter.encodeParams(data), headers)
 	}
+
+	def httpPostData(url: String, data: String, headers : Map[String,String] = Map()) : RestClientResult[String] = {
+	  httpExchangeData(url, "POST", data, headers)
+	}
 	
 	def httpPostAndGetJSon[T : Manifest](url: String, data: Map[String, String], headers : Map[String,String] = Map() ) : RestClientResult[T] = {
 	  val strResult = httpPost(url, data, headers)

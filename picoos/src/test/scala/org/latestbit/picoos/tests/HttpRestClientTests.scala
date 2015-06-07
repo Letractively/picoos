@@ -6,6 +6,7 @@ import scala.reflect._
 import org.latestbit.picoos.serializers.JSonSerializer
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.latestbit.picoos.HttpFormatter
+import scala.collection.JavaConverters._
 
 
 case class IPInfo(origin: String)
