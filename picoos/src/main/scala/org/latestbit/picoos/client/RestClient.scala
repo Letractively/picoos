@@ -125,7 +125,7 @@ class RestClient(
 		  setupHeaders(connection, headers)
 		  connection.connect()
 		  
-		  val output = new OutputStreamWriter(connection.getOutputStream())
+		  val output = new OutputStreamWriter(connection.getOutputStream(), encoding)
 	      output.write(inputData)
 	      output.flush
 	      output.close
